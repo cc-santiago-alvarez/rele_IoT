@@ -84,7 +84,7 @@ Cuatro barreras de aislamiento independientes:
 |---|---|---|
 | HLK-5M05 | 3000 VAC | Separa la red AC del rail DC 5 V |
 | PC817C | 5000 Vrms | Separa la señal del switch (AC) del GPIO (DC) |
-| Relé HF115F-I | 4000 Vrms bobina↔contactos | Separa el circuito de potencia del driver |
+| Relé HF115F-I | 5000 Vrms bobina↔contactos (creepage 10 mm) | Separa el circuito de potencia del driver |
 | PCB slot fresado | 2 mm ancho | Barrera física entre trazas AC y DC |
 
 **Creepage y clearance para Bogotá (2640 m)**:
@@ -275,9 +275,9 @@ Pin 4 (+Vo) ──> +5V_AC rail ──> hacia Módulo 7 (OR-diode)
 
 | Ref | Componente | Valor | Conexión | Banda de frecuencia |
 |---|---|---|---|---|
-| C_out1 | Electrolítico low-ESR | 100 µF / 10 V | +5V_AC (pin 4) a GND_DC (pin 3). Lo más cerca posible del módulo. | Baja freq (DC – 1 kHz). Reserva bulk, transitorios relé/WiFi TX. |
-| C_out2 | Cerámico MLCC X7R | 10 µF / 10 V 0805 | +5V_AC a GND_DC. Paralelo a C_out1, filtra rizado MF. | Media freq (1 kHz – 100 kHz). ESR ultra-bajo absorbe rizado flyback 65-100 kHz. |
-| C_out3 | Cerámico MLCC X7R | 100 nF / 16 V 0805 | +5V_AC a GND_DC. Paralelo a C_out1/C_out2, filtra HF. | Alta freq (>100 kHz). Suprime spikes de conmutación y VHF. |
+| C_out1 | Electrolítico radial | 100 µF / 16 V (5×7 mm) | +5V_AC (pin 4) a GND_DC (pin 3). Lo más cerca posible del módulo. | Baja freq (DC – 1 kHz). Reserva bulk, transitorios relé/WiFi TX. |
+| C_out2 | Cerámico MLCC X5R | 10 µF / 25 V 0805 | +5V_AC a GND_DC. Paralelo a C_out1, filtra rizado MF. | Media freq (1 kHz – 100 kHz). ESR ultra-bajo absorbe rizado flyback 65-100 kHz. |
+| C_out3 | Cerámico MLCC X7R | 100 nF / 50 V 0805 | +5V_AC a GND_DC. Paralelo a C_out1/C_out2, filtra HF. | Alta freq (>100 kHz). Suprime spikes de conmutación y VHF. |
 
 ---
 
@@ -291,33 +291,35 @@ Pin 4 (+Vo) ──> +5V_AC rail ──> hacia Módulo 7 (OR-diode)
 | Resistencia bobina | **~62.5 Ω** | 70 Ω | 720 Ω |
 | Corriente bobina | **80 mA** | 71 mA | 16.7 mA |
 | Potencia bobina | **0.40 W** | 0.36 W | 0.20 W |
-| Configuración contactos | **SPST-NO (1 Form A)** | SPDT (1 Form C) | SPST-NO (1 Form A) |
-| Rating contactos | **16 A / 250 VAC** | 10 A / 125 VAC | 16 A / 250 VAC |
+| Configuración contactos | **SPST-NO (1 Form A) bifurcado** | SPDT (1 Form C) | SPST-NO (1 Form A) |
+| Rating contactos | **16 A / 250 VAC @ 85 °C** | 10 A / 125 VAC | 16 A / 250 VAC |
 | Material contactos | **AgSnO₂** | AgCdO (o AgSnO₂ RoHS) | AgSnO₂ |
 | **Rating de inrush** | **120 A / 20 ms (explícito)** | No especificado | TV-8 (implícito para lighting) |
-| Rigidez dieléctrica bobina↔contacto | **4000 Vrms** | 1500 Vrms | 2500 Vrms |
+| Rigidez dieléctrica bobina↔contacto | **5000 Vrms** (10 mm creepage) | 1500 Vrms | 2500 Vrms |
 | Vida mecánica | **10⁷ ciclos** | 10⁷ ciclos | 2 × 10⁷ ciclos |
 | Vida eléctrica @ carga nominal | **10⁵ ciclos** | 10⁵ ciclos | 10⁴ ciclos |
 | Certificaciones | **UL, TÜV, CQC** | Ninguna confiable | UL, CSA, VDE |
 | Dimensiones | **29.0 × 12.7 × 15.7 mm** | 19.0 × 15.5 × 15.3 mm | 20.0 × 10.0 × 10.9 mm |
 | Precio (qty 100) | **$2.00–3.00** | $0.30–0.50 | $3.00–5.00 |
 
-**Razón de elección sobre el Panasonic AJVN**: bobina de 5 V permite alimentación directa desde el HLK-5M05 sin rail adicional de 12 V. Esto elimina 3–5 componentes del BOM (módulo 12 V o buck converter + capacitores). El rating de inrush de 120 A / 20 ms está explícitamente publicado en el datasheet, mientras que el AJVN solo indica TV-8. Y los 4000 Vrms de aislamiento superan los 2500 Vrms de Shelly.
+**Razón de elección sobre el Panasonic AJVN**: bobina de 5 V permite alimentación directa desde el HLK-5M05 sin rail adicional de 12 V. Esto elimina 3–5 componentes del BOM (módulo 12 V o buck converter + capacitores). El rating de inrush de 120 A / 20 ms está explícitamente publicado en el datasheet, mientras que el AJVN solo indica TV-8. Y los **5000 Vrms** de aislamiento (datasheet Hongfa) superan ampliamente los 2500 Vrms de Shelly.
 
 **Razón de elección sobre el Songle SRD-05**: el Songle es un relé de prototipado sin rating de inrush documentado, con contactos AgCdO que se sueldan con inrush de LED (ver análisis detallado en la ingeniería inversa de la ESP32-C6_Relay_X1). Para producto residencial, inaceptable.
 
 ### Circuito driver del relé — conexiones pin a pin
 
+El HF115F-I tiene **6 pines** (1, 2 bobina; 5, 6, 7, 8 contactos bifurcados — no existen pines 3 ni 4). La bobina es **no polarizada**: cualquiera de los pines 1 o 2 puede ir al +5V. Convención aquí: pin 2 = lado alto, pin 1 = lado conmutado por Q1.
+
 ```
                           +5V rail
                             │
-                     K1 Coil+ (pin 1)
+                     K1 Coil A2 (pin 2)
                             │
                      D1 (SS14) cátodo ──── +5V rail
                             │
                      D1 (SS14) ánodo
                             │
-                     K1 Coil− (pin 5)
+                     K1 Coil A1 (pin 1)
                             │
                      Q1 Collector (SS8050 SOT-23 pin 2)
                             │
@@ -338,8 +340,8 @@ GPIO4 ──[R1: 1.0 kΩ]───────┤
 ### Cálculos del driver
 
 **Corriente de bobina:**
-- I_coil = V_rail / R_coil = 5.0 V / 62.5 Ω = **80 mA**
-- V_CE(sat) del SS8050 a 80 mA ≈ 0.2 V → V_coil real = 4.8 V > 3.75 V (pickup) ✓
+- I_coil = V_rail / R_coil = 5.0 V / 62 Ω ≈ **80 mA**
+- V_CE(sat) del SS8050 a 80 mA ≈ 0.2 V → V_coil real = 4.8 V > **3.5 V (pickup, datasheet)** ✓
 
 **Corriente de base necesaria:**
 - hFE mínimo del SS8050 @ 80 mA = 100 (datasheet)
@@ -368,32 +370,50 @@ GPIO4 ──[R1: 1.0 kΩ]───────┤
 ### Pinout del relé HF115F-I (vista inferior, DIP-6)
 
 ```
-┌───────────────────────────┐
-│         HF115F-I          │
-│  ┌─┐  ┌─┐  ┌─┐  ┌─┐  ┌─┐│
-│  │1│  │2│  │3│  │4│  │5│ │  (Pin 6 = NC, no siempre presente)
-│  └─┘  └─┘  └─┘  └─┘  └─┘│
-└───────────────────────────┘
- Pin 1 = Coil+    ──> +5V rail
- Pin 2 = NC
- Pin 3 = NO       ──> J_LOAD terminal (salida a la carga)      [ZONA AC]
- Pin 4 = COM      ──> Línea AC (desde terminal L directamente)  [ZONA AC]
- Pin 5 = Coil−    ──> Collector de Q1 (SS8050)                  [ZONA DC]
+  Vista inferior (bottom view) — datasheet Hongfa
+
+  ┌─────────────────────────────────────────────┐
+  │                                             │
+  │    ●                                  ●  ●  │
+  │   (2)                                (6)(8) │  ← zona AC (contactos)
+  │                                             │
+  │          HF115F-I/005-1HS3A                 │
+  │          5V 16A 1 Form A bifurcado          │
+  │                                             │
+  │    ●                                  ●  ●  │
+  │   (1)                                (5)(7) │
+  │                                             │
+  └─────────────────────────────────────────────┘
+   ↑ zona DC
+   (bobina)
+
+ Pin 1 = Coil A1   ──> Collector Q1 (+ D1 ánodo)              [ZONA DC]
+ Pin 2 = Coil A2   ──> +5V rail (+ D1 cátodo)                 [ZONA DC]
+ Pin 5 = NO1       ──┐
+                     ├── unir externamente en el PCB → LOAD_OUT → J_LOAD [ZONA AC]
+ Pin 7 = NO2       ──┘
+ Pin 6 = COM1      ──┐
+                     ├── unir externamente en el PCB → AC_L (línea)      [ZONA AC]
+ Pin 8 = COM2      ──┘
 ```
 
-**Nota**: el relé cruza la barrera de aislamiento. Pins 3 y 4 (contactos) están en la zona AC; pins 1 y 5 (bobina) están en la zona DC. El aislamiento de 4000 Vrms del propio relé proporciona la separación.
+**Nota**: el relé cruza la barrera de aislamiento. Pins 5, 6, 7, 8 (contactos) están en la zona AC; pins 1 y 2 (bobina) están en la zona DC. El aislamiento de **5000 Vrms** (creepage interno 10 mm, datasheet Hongfa) del propio relé proporciona la separación.
+
+**Contactos bifurcados**: el HF115F-I tiene dos contactos SPST-NO en paralelo dentro del mismo encapsulado, accionados por la misma armadura. Para aprovechar el rating de 16 A y el inrush de 120 A/20 ms es **obligatorio unir externamente pin 5 con pin 7, y pin 6 con pin 8**. Si solo se cablea un par, la capacidad de corriente se reduce a la mitad.
 
 ### Snubber en contactos de salida
 
 ```
-           Relay COM (pin 4)                    Relay NO (pin 3)
-               │                                     │
-               ├────── [R_snub: 100 Ω 1 W] ─────────┤
-               │                                     │
-               ├────── [C_snub: 10 nF X2 275 VAC] ──┤
-               │                                     │
-               │                                     │
-        Línea AC (L)                           J_LOAD (a la carga)
+     nodo COM bifurcado (K1 pin 6 + pin 8)
+            │
+            ├────── [R_snub: 100 Ω 1 W] ──────┐
+            │                                  │
+            ├────── [C_snub: 10 nF X2] ───────┤
+            │                                  │
+            │                                  │
+     Línea AC (L)                   nodo NO bifurcado (K1 pin 5 + pin 7)
+                                            │
+                                            └── J_LOAD (a la carga)
 ```
 
 **Por qué 10 nF y no 100 nF:**
@@ -406,13 +426,13 @@ GPIO4 ──[R1: 1.0 kΩ]───────┤
 
 | Ref | Componente | Valor / Part Number | Encapsulado | Qty |
 |---|---|---|---|---|
-| K1 | Hongfa HF115F-I/005-1HS3A | Relé 5 V 16 A SPST-NO, AgSnO₂ | DIP-6 THT (29 × 12.7 × 15.7 mm) | 1 |
+| K1 | Hongfa HF115F-I/005-1HS3A | Relé 5 V 16 A 1 Form A bifurcado, AgSnO₂, 5000 Vrms isol. | THT 6 pines (29 × 12.7 × 15.7 mm) | 1 |
 | Q1 | SS8050 NPN BJT | V_CE=25 V, I_C=1.5 A, hFE>=100 | SOT-23 | 1 |
 | D1 | SS14 Schottky | 40 V / 1 A, V_F=0.5 V | SMA (DO-214AC) | 1 |
-| R1 | Resistencia base | 1.0 kΩ ±5 % 1/4 W | 0402 SMD | 1 |
-| R2 | Pull-down anti-boot | 10 kΩ ±5 % 1/4 W | 0402 SMD | 1 |
-| R_snub | Snubber resistor | 100 Ω ±5 % 1 W | Axial THT (tolerancia a 110/220 V) | 1 |
-| C_snub | Snubber capacitor | 10 nF X2 275 VAC | Box film (paso ~10 mm) | 1 |
+| R1 | Resistencia base | 1.0 kΩ ±5 % 1/16 W | 0402 SMD | 1 |
+| R2 | Pull-down anti-boot | 10 kΩ ±5 % 1/16 W | 0402 SMD | 1 |
+| R_snub | Snubber resistor | 100 Ω ±5 % 1 W MFR | Axial THT (tolerancia a 110/220 V) | 1 |
+| C_snub | Snubber capacitor | 10 nF X2 310 VAC (KYET PX103K2C0702) | Box film P=7.5 mm | 1 |
 | J_LOAD | Terminal block salida | KF128-7.5-2P, 300 V / 15 A | THT 7.5 mm pitch | 1 |
 
 ---
@@ -665,7 +685,7 @@ Permitir alimentación desde AC (HLK-5M05, operación normal) o desde USB (para 
                                                             │
                                                            GND
                                                             │
-                                                     +5V rail ──> ME6211 (M4) + K1 Coil+ (M3)
+                                                     +5V rail ──> ME6211 (M4) + K1 Coil A2 pin 2 (M3)
 ```
 
 ### Modos de operación
@@ -864,9 +884,9 @@ N ──┼───────────────────────
     │                                                       │
     └─────────────────────────────── Neutro return ─────────┘
     
-    COM (K1 pin 4) ── L (Línea directa)
-    NO  (K1 pin 3) ──┬──[R_snub 100Ω + C_snub 10nF X2]──┬── J_LOAD ── Carga ── N
-                      └───────────────────────────────────┘
+    COM bifurcado (K1 pin 6 ═══ pin 8) ── L (Línea directa)
+    NO  bifurcado (K1 pin 5 ═══ pin 7) ──┬──[R_snub 100Ω + C_snub 10nF X2]──┬── J_LOAD ── Carga ── N
+                                          └──────────────────────────────────┘
 
 ═══════ SLOT FRESADO 2 mm (3000 VAC AISLAMIENTO GALVÁNICO) ═══════
 
@@ -878,12 +898,12 @@ USB VBUS ──[PTC1 500mA] ──|>|── D_USB (SS14)┘
                                                        │
                                             +5V rail ──┤
                                                        │
-                                              K1 Coil+ (pin 1)
+                                              K1 Coil A2 (pin 2)
                                               D1 (SS14) cátodo ─── +5V
                                                        │
                             GPIO4 ──[R1 1k]── Q1 Base  │
                                      [R2 10k]── GND    │
-                            Q1 Collector ── K1 Coil- (pin 5) ── D1 ánodo
+                            Q1 Collector ── K1 Coil A1 (pin 1) ── D1 ánodo
                             Q1 Emitter ── GND
                                                        │
                                               ME6211 VIN ─┤
@@ -936,7 +956,7 @@ Todos los componentes incluyen referencia **LCSC** para importación directa en 
 | 3 | U3 | PC817C (grado C) | Optoacoplador CTR >= 200 %, 5000 Vrms | DIP-4 | **C66463** | 1 |
 | 4 | U4 | USBLC6-2SC6 | TVS ESD USB, IEC 61000-4-2 nivel 4 | SOT-23-6 | **C7519** | 1 |
 | 5 | U5 | HLK-5M05 | Fuente AC-DC 5 V/1 A, 3000 VAC aislamiento | Módulo DIP-4 34×20×15 mm | **C209907** | 1 |
-| 6 | K1 | HF115F-I/005-1HS3A | Relé 5 V 16 A SPST-NO, AgSnO₂, 4000 Vrms | DIP-6 THT 29×12.7 mm | **C2976795** | 1 |
+| 6 | K1 | HF115F-I/005-1HS3A | Relé 5 V 16 A 1 Form A bifurcado, AgSnO₂, 5000 Vrms | THT 6 pines (29×12.7×15.7 mm) | **C2976795** | 1 |
 | 7 | Q1 | SS8050-G | NPN BJT, V_CE=25 V, I_C=1.5 A, hFE 120-200 | SOT-23 | **C164886** | 1 |
 
 ### Diodos
@@ -966,7 +986,7 @@ Todos los componentes incluyen referencia **LCSC** para importación directa en 
 | 23 | R_DP | 22 Ω ±5 % | 1/4 W | 0402 | **C25092** | 1 | Terminación serie USB D+ |
 | 24 | R_DM | 22 Ω ±5 % | 1/4 W | 0402 | **C25092** | 1 | Terminación serie USB D− |
 | 25 | R_disc | 1 MΩ ±1 % | 1 W MFR | Axial THT | **C433678** | 1 | Descarga capacitor X2 |
-| 26 | R_snub | 100 Ω ±5 % | 1 W MFR | Axial THT | **C176407** | 1 | Snubber contactos relé |
+| 26 | R_snub | 100 Ω ±1 % | 1 W MFR (YAGEO MFR1WSFTE52-100R) | Axial THT D3.3×L9 mm | **C172915** | 1 | Snubber contactos relé |
 
 ### Capacitores
 
@@ -985,7 +1005,7 @@ Todos los componentes incluyen referencia **LCSC** para importación directa en 
 | 37 | C_USB1 | 10 µF / 10 V | X7R MLCC | 0805 | **C15850** | 1 | Filtro VBUS USB |
 | 38 | C_USB2 | 100 nF / 16 V | X7R MLCC | 0402 | **C14663** | 1 | Decouple VBUS USB |
 | 39 | CX1 | 100 nF / 275 VAC | X2 MKP Film | Film P=15 mm | **C434188** | 1 | Filtro EMI diferencial AC |
-| 40 | C_snub | 10 nF / 275 VAC | X2 Film | Film P=7.5 mm | **C914480** | 1 | Snubber contactos relé |
+| 40 | C_snub | 10 nF / 310 VAC | X2 Film | Film P=7.5 mm | **C2693738** | 1 | Snubber contactos relé (KYET PX103K2C0702) |
 
 ### Protecciones y fusibles
 

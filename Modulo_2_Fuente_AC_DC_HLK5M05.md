@@ -223,40 +223,41 @@ El HLK-5M05 mantiene su salida regulada a 5V ±2% mediante un lazo de control ce
 
 ### 3.1 Diagrama General del Módulo
 
+El diagrama muestra el flujo de energía de izquierda a derecha: AC entra por los pins 1/2, cruza la barrera de aislamiento galvánico dentro del HLK-5M05, sale como DC por los pins 3/4, pasa por tres capacitores de filtrado en paralelo, y alimenta al Módulo 7.
+
 ```
-                         MÓDULO 2 — FUENTE AC-DC AISLADA HLK-5M05
-                         ══════════════════════════════════════════
+       ZONA AC (peligrosa)       │  BARRERA  │        ZONA DC (SELV, segura)
+       ──────────────────        │ 3000 VAC  │        ──────────────────────
+                                  │ AISLAM.  │
+  (desde Módulo 1)                │           │                      (hacia Módulo 7)
+                                  │           │
+              ┌──────────────────────────────────────────┐
+  AC_L_OUT ─►│ Pin 1 (AC)                   Pin 4 (+Vo) │─► +5V_AC ──────┬───────┬───────┬──► D_AC (M7)
+              │                                           │                 │       │       │     ánodo SS14
+              │           HLK-5M05 (U5)                  │                ═╪═     ═╪═     ═╪═
+              │      AC-DC Isolated Supply               │              C_out1  C_out2  C_out3
+              │          3000 VAC / 5W                   │              100µF   10µF    100nF
+              │                                           │              16V     25V     50V
+              │                                           │              electr. MLCC    MLCC
+              │                                           │              (THT)   X5R     X7R
+  AC_N_OUT ─►│ Pin 2 (AC)                   Pin 3 (-Vo) │─► GND_DC ──────┴───────┴───────┴──► GND sistema DC
+              └──────────────────────────────────────────┘                                      (M3, M4, M5,
+                                  │           │                                                   M6, M7, M8, M9)
+                                  │  ┌─────┐  │
+                    ···············│··│SLOT │··│·············· (slot fresado 2 mm en el PCB,
+                                  │  │ 2mm │  │                 pasa debajo del cuerpo del módulo)
+                                  │  └─────┘  │
+                                  │           │
 
-  MÓDULO 1                                                                → MÓDULO 7
-  (protecciones)                                                            (OR-Diode)
+  Leyenda de flujo de corriente:
+    ─► : dirección de flujo de energía / señal
+    ═╪═: capacitor conectado a GND (símbolo esquemático)
+    ···: slot fresado del PCB (barrera física de aislamiento)
 
-                              ╔═══════════════════════════╗
-                              ║       HLK-5M05 (U5)       ║
-                              ║    AC-DC Isolated Supply   ║
-                              ║       3000 VAC / 5W        ║
-                              ║                             ║
-  AC_L_OUT ──────────────────►║ Pin 1 (AC)    Pin 4 (+Vo) ║──►─┬── +5V_AC
-  (desde L1 pin2, M1)         ║                             ║    │
-                              ║   ┌─────────────────────┐   ║    │   C_out1        C_out2        C_out3
-  AC_N_OUT ──────────────────►║ Pin 2 (AC)  │ BARRERA │  Pin 3 (-Vo) ║    │  ┌────────┐    ┌────────┐    ┌────────┐
-  (desde L1 pin3, M1)         ║             │ 3000VAC │             ║    ├──┤100µF/10V├──┬─┤10µF/10V ├──┬─┤100nF/16V├──┐
-                              ║             │ AISLAM. │             ║    │  └────────┘  │ └────────┘  │ └────────┘  │
-                              ╚═══════════════════════════╝    │  (electrol.)  │  (MLCC X7R) │  (MLCC X7R) │
-                                                                │                  │              │              │
-                              ···· SLOT FRESADO 2 mm ····       │                  │              │              │
-                                                                │                  │              │              │
-                                                           GND_DC ◄───────────────┴──────────────┴──────────────┘
-                                                                │
-                                                                ▼
-                                                          Referencia GND
-                                                          para toda la
-                                                          zona DC (M3-M9)
-
-  +5V_AC ──────────────────────────────────────────────► D_AC (SS14, M7)
-                                                          ánodo → cátodo
-                                                               │
-                                                          +5V_COMBINED
-                                                          (hacia M4, M3)
+  Los tres capacitores en paralelo están en orden de montaje recomendado:
+    C_out3 (100nF) → más cerca de pins 3/4 (intercepta HF primero)
+    C_out2 (10µF)  → en el medio (filtra rizado MF del flyback)
+    C_out1 (100µF) → más lejos (reserva bulk, transitorios de carga)
 ```
 
 ### 3.2 Tabla de Nets (Conexiones Eléctricas)
@@ -278,20 +279,20 @@ U5 — HLK-5M05 (Módulo DIP-4, 34 × 20 × 15 mm)
   Pin 4 (+Vo) ────► +5V_AC rail (5 VDC aislado)
   [No polarizado: pins 1 y 2 son intercambiables (L/N)]
 
-C_out1 — Electrolítico 100 µF / 10 V (radial THT 4×7 mm)
+C_out1 — Electrolítico 100 µF / 16 V (radial THT 5×7 mm)
   Pin (+) ◄──── +5V_AC (HLK-5M05 pin 4)
   Pin (−) ◄──── GND_DC (HLK-5M05 pin 3)
   [Reserva de energía bulk. Absorbe transitorios de carga lenta: activación
    de relé (80 mA step), ráfagas WiFi TX (530 mA, 2 ms). Colocar < 5 mm de pins 3,4]
 
-C_out2 — Cerámico MLCC 10 µF / 10 V X7R (0805)
+C_out2 — Cerámico MLCC 10 µF / 25 V X5R (0805)
   Pad 1 ◄──── +5V_AC (en paralelo con C_out1)
   Pad 2 ◄──── GND_DC (en paralelo con C_out1)
   [Filtra rizado de media frecuencia (1 kHz – 100 kHz). Su ESR ultra-bajo
    (~5 mΩ) absorbe el rizado de conmutación del flyback a 65-100 kHz que
    el electrolítico (ESR ~0.5-2 Ω) no puede filtrar eficientemente]
 
-C_out3 — Cerámico MLCC 100 nF / 16 V X7R (0805)
+C_out3 — Cerámico MLCC 100 nF / 50 V X7R (0805)
   Pad 1 ◄──── +5V_AC (en paralelo con C_out1 y C_out2)
   Pad 2 ◄──── GND_DC (en paralelo con C_out1 y C_out2)
   [Filtra ruido de muy alta frecuencia (>100 kHz – MHz). Suprime spikes
@@ -438,9 +439,9 @@ El filtrado de salida usa **tres capacitores en paralelo** que cubren todo el es
 
 | # | Ref | Componente | Valor / Specs | Encapsulado | LCSC Code | Fabricante | MPN | Precio aprox. |
 |---|---|---|---|---|---|---|---|---|
-| 2 | C_out1 | Electrolítico bulk output | 100 µF / 10 V, low-ESR | Radial THT 4×7 mm | **C43314** | Chengx | KM107M010I12RR0VH2FP0 | $0.02 |
-| 3 | C_out2 | MLCC cerámico MF | 10 µF / 10 V, X7R | 0805 SMD | **C15850** | SAMSUNG | CL21B106KOQNNNE | $0.01 |
-| 4 | C_out3 | MLCC cerámico HF | 100 nF / 16 V, X7R | 0805 SMD | **C49678** | SAMSUNG | CL21B104KBCNNNC | $0.01 |
+| 2 | C_out1 | Electrolítico bulk output | 100 µF / 16 V, ±20%, 2000 hrs @ 105°C | Radial THT 5×7 mm (pitch 2 mm) | **C43803** | Chengx (Dongguan Chengxing) | KS107M016D07RR0VH2FP0 | $0.01 |
+| 3 | C_out2 | MLCC cerámico MF | 10 µF / 25 V, ±10%, X5R | 0805 SMD | **C15850** | Samsung Electro-Mechanics | CL21A106KAYNNNE | $0.02 |
+| 4 | C_out3 | MLCC cerámico HF | 100 nF / 50 V, ±10%, X7R | 0805 SMD | **C49678** | YAGEO | CC0805KRX7R9BB104 | $0.01 |
 
 ### 5.3 Componentes Alternativos / Equivalentes
 
@@ -449,18 +450,18 @@ Para cada componente, si el código LCSC primario no está disponible al momento
 | Ref | Primario | Alternativa 1 | Alternativa 2 | Notas |
 |---|---|---|---|---|
 | U5 | C209907 (HI-LINK HLK-5M05) | **MeanWell IRM-05-5** (para producción UL/TÜV/CB) | HLK-PM05 (pin-compatible, 5W variante) | IRM-05-5 tiene mismo footprint DIP-4 y certificación UL. Buscar en Mouser/Digikey |
-| C_out1 | C43314 (Chengx 100µF/10V) | C3339 (Nichicon UVR1A101MDD, 100µF/10V) | C65243 (Rubycon 100µF/10V) | Cualquier electrolítico 100µF/10V radial ≤ 5×7 mm |
-| C_out2 | C15850 (Samsung CL21B106KOQNNNE 0805) | C19702 (Murata GRM21BR61A106ME51, 10µF/10V) | C86350 (YAGEO 10µF/10V X7R 0805) | Cualquier MLCC 10µF X7R 0805, ESR bajo |
-| C_out3 | C49678 (Samsung CL21B104KBCNNNC 0805) | C1525 (Samsung CL21B104KBCNNNC lote alt.) | C14663 (YAGEO CC0402KRX7R9BB104, 0402) | Cualquier MLCC 100nF X7R, 0805 preferido |
+| C_out1 | C43803 (Chengx 100µF/16V, 5×7 mm) | C43805 (Chengx 100µF/16V, 6.3×7 mm KS107M016E07RR0VH2FP0) | C43348 (Chengx 100µF/16V, 5×11 mm KM107M016D11RR0VH2FP0) | Cualquier electrolítico 100µF ≥10V radial, footprint similar |
+| C_out2 | C15850 (Samsung CL21A106KAYNNNE, 10µF/25V X5R 0805) | C19702 (Murata GRM21 series 10µF/25V X5R 0805) | C96446 (YAGEO CC0805KKX7R8BB106, 10µF/10V X7R 0805) | Cualquier MLCC 10µF ≥10V, 0805, ESR bajo. X5R/X7R aceptable |
+| C_out3 | C49678 (YAGEO CC0805KRX7R9BB104, 100nF/50V X7R 0805) | C17903 (Samsung CL21B104KBCNNNC, 100nF/50V X7R 0805) | C14663 (YAGEO CC0402KRX7R9BB104, 100nF/50V X7R 0402) | Cualquier MLCC 100nF ≥16V X7R, 0805 preferido |
 
 ### 5.4 Resumen de Costo del Módulo 2
 
 | Componente | Costo unitario (aprox.) |
 |---|---|
 | U5 HLK-5M05 (C209907) | $2.50 |
-| C_out1 100µF/10V (C43314) | $0.02 |
-| C_out2 10µF/10V MLCC (C15850) | $0.01 |
-| C_out3 100nF/16V MLCC (C49678) | $0.01 |
+| C_out1 100µF/16V electrolítico (C43803) | $0.01 |
+| C_out2 10µF/25V MLCC X5R (C15850) | $0.02 |
+| C_out3 100nF/50V MLCC X7R (C49678) | $0.01 |
 | **TOTAL Módulo 2** | **~$2.54 USD** |
 
 *Precios de LCSC en cantidades ≥ 10 unidades. Sujetos a cambio.*
@@ -566,7 +567,7 @@ El pin 3 del HLK-5M05 establece el **único punto de referencia de tierra** para
 
 ## 8. Checklist de Verificación Pre-Fabricación
 
-- [ ] Verificar disponibilidad de cada LCSC code antes de ordenar: C209907, C43314, C15850, C49678
+- [ ] Verificar disponibilidad de cada LCSC code antes de ordenar: C209907, C43803, C15850, C49678
 - [ ] Confirmar que las dimensiones del HLK-5M05 (34×20×15 mm) caben en el layout del PCB
 - [ ] Verificar que el slot fresado de 2 mm pasa bajo el cuerpo del HLK-5M05 entre pins AC (1,2) y DC (3,4)
 - [ ] Medir creepage ≥ 6.5 mm a través del slot en el layout (entre cobre zona AC y cobre zona DC)

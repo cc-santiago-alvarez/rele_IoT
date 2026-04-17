@@ -4,7 +4,7 @@ U2,ME6211C33M5G-N,3.3V 500mA LDO,SOT-23-5,1,C82942,Microne(Nanjing Micro One Ele
 U3,PC817C,Optocoupler CTR>=200%,DIP-4,1,C66463,Sharp Microelectronics,PC817X2NSZ0F,Optocoupler 5000Vrms isolation grade C,M8
 U4,USBLC6-2SC6,USB ESD TVS,SOT-23-6,1,C7519,STMicroelectronics,USBLC6-2SC6,ESD Protection IEC61000-4-2 Level 4,M6
 U5,HLK-5M05,5V/1A AC-DC Isolated,Module DIP-4 34x20x15mm,1,C209907,HI-LINK,HLK-5M05,AC-DC 3000VAC isolation 5W 85-265VAC,M2
-K1,HF115F-I/005-1HS3A,5V 16A SPST-NO Relay,DIP-6 THT 29x12.7mm,1,C2976795,Hongfa,HF115F-I/005-1HS3A,Relay AgSnO2 120A/20ms inrush 4kVrms,M3
+K1,HF115F-I/005-1HS3A,5V 16A 1 Form A bifurcado Relay,THT 6-pin 29x12.7x15.7mm,1,C2976795,Hongfa,HF115F-I/005-1HS3A,Relay AgSnO2 120A/20ms inrush 5000Vrms isolation,M3
 Q1,SS8050,NPN BJT,SOT-23,1,C164886,Changjiang Electronics(JSCJ),SS8050-G,NPN Vce=25V Ic=1.5A hFE 120-200,M3
 D1,SS14,Schottky 40V/1A,SMA DO-214AC,1,C2480,MDD(Microdiode Electronics),SS14,Flyback diode relay VF=0.5V,M3
 D2,1N4007,Rectifier 1000V/1A,SMA DO-214AC,1,C727110,YUNSUNENERGY,1N4007W,Half-wave rectifier optocoupler,M8
@@ -24,22 +24,22 @@ R_CC2,Resistor,5.1k 1/4W 1%,0402,1,C25905,UNI-ROYAL(Uniroyal Elec),0402WGF5101TC
 R_DP,Resistor,22R 1/4W 5%,0402,1,C25092,UNI-ROYAL(Uniroyal Elec),0402WGF220JTCE,USB D+ series termination GPIO19,M6
 R_DM,Resistor,22R 1/4W 5%,0402,1,C25092,UNI-ROYAL(Uniroyal Elec),0402WGF220JTCE,USB D- series termination GPIO18,M6
 R_disc,Resistor,1M 1W 1% MFR,Axial THT D3.3xL9mm,1,C433678,TyoHM,RN 1WS 1M F T/B A1,X2 capacitor discharge safety IEC,M1
-R_snub,Resistor,100R 1W 5% MFR,Axial THT D3.3xL9mm,1,C176407,YAGEO,MFR1WSJT-52-100R,Snubber relay contacts,M3
+R_snub,Resistor,100R 1W 1% MFR,Axial THT D3.3xL9mm,1,C172915,YAGEO,MFR1WSFTE52-100R,Snubber relay contacts,M3
 C4,Capacitor MLCC,1uF/25V X7R,0603,1,C15849,SAMSUNG,CL10B105KA8NNNC,ME6211 input capacitor,M4
-C5,Capacitor MLCC,10uF/10V X7R,0805,1,C15850,SAMSUNG,CL21B106KOQNNNE,ME6211 output bulk,M4
+C5,Capacitor MLCC,10uF/25V X5R,0805,1,C15850,Samsung Electro-Mechanics,CL21A106KAYNNNE,ME6211 output bulk,M4
 C6,Capacitor MLCC,100nF/16V X7R,0402,1,C14663,YAGEO,CC0402KRX7R9BB104,ME6211 output HF decouple,M4
-C_vdd1,Capacitor MLCC,10uF/10V X7R,0805,1,C15850,SAMSUNG,CL21B106KOQNNNE,ESP32-C3 3.3V decouple,M5
+C_vdd1,Capacitor MLCC,10uF/25V X5R,0805,1,C15850,Samsung Electro-Mechanics,CL21A106KAYNNNE,ESP32-C3 3.3V decouple,M5
 C_vdd2,Capacitor MLCC,100nF/16V X7R,0402,1,C14663,YAGEO,CC0402KRX7R9BB104,ESP32-C3 HF decouple,M5
 C_EN,Capacitor MLCC,100nF/16V X7R,0402,1,C14663,YAGEO,CC0402KRX7R9BB104,Reset EN pin filter,M5
 C_deb,Capacitor MLCC,100nF/16V X7R,0402,1,C14663,YAGEO,CC0402KRX7R9BB104,Optocoupler HW debounce GPIO5,M8
-C_out1,Capacitor Electrolytic,100uF/10V,Radial THT 4x7mm,1,C43314,Chengx,KM107M010I12RR0VH2FP0,HLK-5M05 output bulk filter,M2
-C_out2,Capacitor MLCC,10uF/10V X7R,0805,1,C15850,SAMSUNG,CL21B106KOQNNNE,HLK-5M05 output MF ripple filter,M2
-C_out3,Capacitor MLCC,100nF/16V X7R,0805,1,C49678,SAMSUNG,CL21B104KBCNNNC,HLK-5M05 output HF filter,M2
-C_bulk,Capacitor Electrolytic,100uF/10V,Radial THT 4x7mm,1,C43314,Chengx,KM107M010I12RR0VH2FP0,Combined 5V rail bulk,M7
-C_USB1,Capacitor MLCC,10uF/10V X7R,0805,1,C15850,SAMSUNG,CL21B106KOQNNNE,USB VBUS filter,M6
+C_out1,Capacitor Electrolytic,100uF/16V,Radial THT 5x7mm,1,C43803,Chengx,KS107M016D07RR0VH2FP0,HLK-5M05 output bulk filter,M2
+C_out2,Capacitor MLCC,10uF/25V X5R,0805,1,C15850,Samsung Electro-Mechanics,CL21A106KAYNNNE,HLK-5M05 output MF ripple filter,M2
+C_out3,Capacitor MLCC,100nF/50V X7R,0805,1,C49678,YAGEO,CC0805KRX7R9BB104,HLK-5M05 output HF filter,M2
+C_bulk,Capacitor Electrolytic,100uF/16V,Radial THT 5x7mm,1,C43803,Chengx,KS107M016D07RR0VH2FP0,Combined 5V rail bulk,M7
+C_USB1,Capacitor MLCC,10uF/25V X5R,0805,1,C15850,Samsung Electro-Mechanics,CL21A106KAYNNNE,USB VBUS filter,M6
 C_USB2,Capacitor MLCC,100nF/16V X7R,0402,1,C14663,YAGEO,CC0402KRX7R9BB104,USB VBUS decouple,M6
 CX1,Safety Capacitor,100nF/275VAC X2 MKP,Film P=15mm,1,C434188,Jimson,MKP104K275A07,AC differential EMI filter,M1
-C_snub,Safety Capacitor,10nF/275VAC X2,Film P=7.5mm,1,C914480,NDF,X2-103K-275VAC,Snubber relay contacts anti-ghost,M3
+C_snub,Safety Capacitor,10nF/310VAC X2,Film P=7.5mm,1,C2693738,KYET,PX103K2C0702,Snubber relay contacts anti-ghost,M3
 F1,Fuse Slow-Blow,1A 250V 5x20mm,Axial Glass,1,C142715,Littelfuse,0215001.MXP,AC input overcurrent protection,M1
 F1_holder,Fuse Holder,5x20mm BLX-A,PCB Mount THT,1,C3131,Xucheng Elec,5x20 BLX-A XC-7,PCB mount fuseholder for F1,M1
 TF1,Thermal Fuse,115C 15A 250V,Axial THT,1,C20448209,SETsafe/SETfuse,T115,Fire protection thermal cutoff,M1
