@@ -1,8 +1,8 @@
 Ref,Component,Value,Package,Qty,LCSC_Part,Manufacturer,MPN,Description,Module
-U1,ESP32-C3-MINI-1-N4,4MB WiFi4+BLE5 RISC-V 160MHz,Module Castellated 13.2x16.6mm,1,C2838502,Espressif Systems,ESP32-C3-MINI-1-N4,MCU WiFi BLE 5 USB native Arduino+IDF,M5
+U1,ESP32-C3-MINI-1-N4,4MB WiFi4+BLE5 RISC-V 160MHz,Module Castellated 13.2x16.6mm,1,C2838502,Espressif Systems,ESP32-C3-MINI-1-N4,MCU WiFi BLE 5 USB native Arduino+IDF (U1 - 53-pin castellated footprint),M5
 U2,ME6211C33M5G-N,3.3V 500mA LDO,SOT-23-5,1,C82942,Microne(Nanjing Micro One Elec),ME6211C33M5G-N,LDO Regulator 100mV dropout 40uA Iq,M4
 U3,PC817C,Optocoupler CTR>=200%,DIP-4,1,C66463,Sharp Microelectronics,PC817X2NSZ0F,Optocoupler 5000Vrms isolation grade C,M8
-U4,USBLC6-2SC6,USB ESD TVS,SOT-23-6,1,C7519,STMicroelectronics,USBLC6-2SC6,ESD Protection IEC61000-4-2 Level 4,M6
+U_TVS,USBLC6-2SC6,USB ESD TVS,SOT-23-6,1,C7519,STMicroelectronics,USBLC6-2SC6,ESD Protection IEC61000-4-2 Level 4,M6
 U5,HLK-5M05,5V/1A AC-DC Isolated,Module DIP-4 34x20x15mm,1,C209907,HI-LINK,HLK-5M05,AC-DC 3000VAC isolation 5W 85-265VAC,M2
 K1,HF115F-I/005-1HS3A,5V 16A 1 Form A bifurcado Relay,THT 6-pin 29x12.7x15.7mm,1,C2976795,Hongfa,HF115F-I/005-1HS3A,Relay AgSnO2 120A/20ms inrush 5000Vrms isolation,M3
 Q1,SS8050,NPN BJT,SOT-23,1,C164886,Changjiang Electronics(JSCJ),SS8050-G,NPN Vce=25V Ic=1.5A hFE 120-200,M3
@@ -17,20 +17,21 @@ R4,Resistor,68k 1W 5% MFR,Axial THT D3.3xL9mm,1,C176393,YAGEO,MFR1WSJT-52-68K,AC
 R5,Resistor,10k 1/4W 5%,0402,1,C25744,UNI-ROYAL(Uniroyal Elec),0402WGF1002TCE,Pull-up phototransistor GPIO5,M8
 R_LED,Resistor,470R 1/4W 5%,0402,1,C25117,UNI-ROYAL(Uniroyal Elec),0402WGF4700TCE,Status LED current limit GPIO6,M9
 R_NTC_PU,Resistor,10k 1/4W 1%,0402,1,C25744,UNI-ROYAL(Uniroyal Elec),0402WGF1002TCE,NTC pull-up temperature sensor GPIO3,M9
-R_EN,Resistor,10k 1/4W 5%,0402,1,C25744,UNI-ROYAL(Uniroyal Elec),0402WGF1002TCE,EN pin pull-up reset circuit,M5
-R_STRAP,Resistor,10k 1/4W 5%,0402,1,C25744,UNI-ROYAL(Uniroyal Elec),0402WGF1002TCE,GPIO2 strapping pull-up (C3 only),M5
+R_EN,Resistor,10k 1/4W 5%,0402,1,C25744,UNI-ROYAL(Uniroyal Elec),0402WGF1002TCE,EN pin pull-up reset circuit (to U1 pin 8),M5
+R_STRAP,Resistor,10k 1/4W 5%,0402,1,C25744,UNI-ROYAL(Uniroyal Elec),0402WGF1002TCE,GPIO2 strapping pull-up mandatory on C3 (to U1 pin 5 / IO2),M5
 R_CC1,Resistor,5.1k 1/4W 1%,0402,1,C25905,UNI-ROYAL(Uniroyal Elec),0402WGF5101TCE,USB-C CC1 pull-down compliance,M6
 R_CC2,Resistor,5.1k 1/4W 1%,0402,1,C25905,UNI-ROYAL(Uniroyal Elec),0402WGF5101TCE,USB-C CC2 pull-down compliance,M6
 R_DP,Resistor,22R 1/4W 5%,0402,1,C25092,UNI-ROYAL(Uniroyal Elec),0402WGF220JTCE,USB D+ series termination GPIO19,M6
 R_DM,Resistor,22R 1/4W 5%,0402,1,C25092,UNI-ROYAL(Uniroyal Elec),0402WGF220JTCE,USB D- series termination GPIO18,M6
+R_shell,Resistor,1M 1/4W 1%,0402,1,C26083,UNI-ROYAL(Uniroyal Elec),0402WGF1004TCE,USB shell DC drain to GND EMC/ESD,M6
 R_disc,Resistor,1M 1W 1% MFR,Axial THT D3.3xL9mm,1,C433678,TyoHM,RN 1WS 1M F T/B A1,X2 capacitor discharge safety IEC,M1
 R_snub,Resistor,100R 1W 1% MFR,Axial THT D3.3xL9mm,1,C172915,YAGEO,MFR1WSFTE52-100R,Snubber relay contacts,M3
 C4,Capacitor MLCC,1uF/25V X7R,0603,1,C15849,SAMSUNG,CL10B105KA8NNNC,ME6211 input capacitor,M4
 C5,Capacitor MLCC,10uF/25V X5R,0805,1,C15850,Samsung Electro-Mechanics,CL21A106KAYNNNE,ME6211 output bulk,M4
 C6,Capacitor MLCC,100nF/16V X7R,0402,1,C14663,YAGEO,CC0402KRX7R9BB104,ME6211 output HF decouple,M4
-C_vdd1,Capacitor MLCC,10uF/25V X5R,0805,1,C15850,Samsung Electro-Mechanics,CL21A106KAYNNNE,ESP32-C3 3.3V decouple,M5
-C_vdd2,Capacitor MLCC,100nF/16V X7R,0402,1,C14663,YAGEO,CC0402KRX7R9BB104,ESP32-C3 HF decouple,M5
-C_EN,Capacitor MLCC,100nF/16V X7R,0402,1,C14663,YAGEO,CC0402KRX7R9BB104,Reset EN pin filter,M5
+C_vdd1,Capacitor MLCC,10uF/25V X5R,0805,1,C15850,Samsung Electro-Mechanics,CL21A106KAYNNNE,ESP32-C3 3.3V bulk decouple (to U1 pin 3 / 3V3),M5
+C_vdd2,Capacitor MLCC,100nF/16V X7R,0402,1,C14663,YAGEO,CC0402KRX7R9BB104,ESP32-C3 3.3V HF decouple (to U1 pin 3 / 3V3 - placed <1.5mm),M5
+C_EN,Capacitor MLCC,100nF/16V X7R,0402,1,C14663,YAGEO,CC0402KRX7R9BB104,Reset EN pin anti-glitch filter (to U1 pin 8),M5
 C_deb,Capacitor MLCC,100nF/16V X7R,0402,1,C14663,YAGEO,CC0402KRX7R9BB104,Optocoupler HW debounce GPIO5,M8
 C_out1,Capacitor Electrolytic,100uF/16V,Radial THT 5x7mm,1,C43803,Chengx,KS107M016D07RR0VH2FP0,HLK-5M05 output bulk filter,M2
 C_out2,Capacitor MLCC,10uF/25V X5R,0805,1,C15850,Samsung Electro-Mechanics,CL21A106KAYNNNE,HLK-5M05 output MF ripple filter,M2
@@ -38,6 +39,7 @@ C_out3,Capacitor MLCC,100nF/50V X7R,0805,1,C49678,YAGEO,CC0805KRX7R9BB104,HLK-5M
 C_bulk,Capacitor Electrolytic,100uF/16V,Radial THT 5x7mm,1,C43803,Chengx,KS107M016D07RR0VH2FP0,Combined 5V rail bulk,M7
 C_USB1,Capacitor MLCC,10uF/25V X5R,0805,1,C15850,Samsung Electro-Mechanics,CL21A106KAYNNNE,USB VBUS filter,M6
 C_USB2,Capacitor MLCC,100nF/16V X7R,0402,1,C14663,YAGEO,CC0402KRX7R9BB104,USB VBUS decouple,M6
+C_shell,Capacitor MLCC,4.7nF/50V X7R,0402,1,C106208,YAGEO,CC0402KRX7R9BB472,USB shell AC coupling to GND EMC,M6
 CX1,Safety Capacitor,100nF/275VAC X2 MKP,Film P=15mm,1,C434188,Jimson,MKP104K275A07,AC differential EMI filter,M1
 C_snub,Safety Capacitor,10nF/310VAC X2,Film P=7.5mm,1,C2693738,KYET,PX103K2C0702,Snubber relay contacts anti-ghost,M3
 F1,Fuse Slow-Blow,1A 250V 5x20mm,Axial Glass,1,C142715,Littelfuse,0215001.MXP,AC input overcurrent protection,M1
@@ -51,8 +53,8 @@ J_LOAD,Terminal Block Screw,KF128-7.5-2P 300V/15A,THT P=7.5mm,1,C474954,Cixi Kef
 J_SW,Terminal Block Screw,KF128-5.0-2P 300V/10A,THT P=5.0mm,1,C474950,Cixi Kefa Elec,KF128-5.0-2P,Wall switch input,M8
 J_USB,USB-C Connector,16-pin Type-C SMD,SMD Mid-mount,1,C165948,Korean Hroparts Elec,TYPE-C-31-M-12,Firmware flashing USB-C with tabs,M6
 J_UART,Pin Header Male,4-pin 1.27mm pitch,THT Plugin,1,C3408,BOOMELE,1.27-1x50P (cut to 4),UART fallback flash GPIO21/20,M6
-SW1,Tactile Switch,6x6x4.3mm SPST,THT 4-pin,1,C318884,XKB Connectivity,TS-1187A-B-A-B,Boot mode button GPIO9,M5
-SW2,Tactile Switch,6x6x4.3mm SPST,THT 4-pin,1,C318884,XKB Connectivity,TS-1187A-B-A-B,Reset button EN pin,M5
+SW1,Tactile Switch,6x6x4.3mm SPST,THT 4-pin,1,C318884,XKB Connectivity,TS-1187A-B-A-B,Boot mode button - between U1 pin 23 (IO9) and GND,M5
+SW2,Tactile Switch,6x6x4.3mm SPST,THT 4-pin,1,C318884,XKB Connectivity,TS-1187A-B-A-B,Reset button - between U1 pin 8 (EN) and GND,M5
 LED1,LED Green,0805 520-530nm,0805 SMD,1,C2297,Hubei KENTO Elec,KT-0805G,Status indicator GPIO6 active-low,M9
 NTC_temp,NTC Thermistor,10k B=3435 1% 0805,0805 SMD,1,C3195213,Vishay,NTCS0805E3103FHT,Board temperature sensor GPIO3,M9
 L1,Common Mode Choke,10mH 0.5A,DIP-4 THT UU9.8,1,C148474,FH(Guangdong Fenghua),UU9.8-10mH,EMI filter (optional prototype),M1

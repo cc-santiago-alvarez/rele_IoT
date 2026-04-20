@@ -258,89 +258,175 @@ Con estas vías, la resistencia térmica efectiva θ_JA del módulo baja de ~45 
 
 ### 4.1 Diagrama General del Módulo
 
-```
-      MÓDULO 5 — ESP32-C3-MINI-1-N4 (U1)
-      ═════════════════════════════════════
+Numeración de pines tomada directamente de la **huella oficial EasyEDA Pro del LCSC C2838502** (ESP32-C3-MINI-1-N4). Los pines marcados como `NC` en la huella **deben dejarse físicamente sin conectar** en el esquemático.
 
-        +3.3V (desde M4)                       GND_DC (plano común)
-            │                                       │
-            ├──[C_vdd1: 10 µF X5R 0805]────────────┤
-            │                                       │
-            ├──[C_vdd2: 100 nF X7R 0402]───────────┤
-            │                                       │
-            ▼                                       ▼
-      ┌───────────────────────────────────────────────────┐
-      │                                                   │
-      │   Pin 3V3  ◄── +3.3V                              │
-      │   Pin GND  ──► GND_DC (+ pad inferior, 4 vías)    │
-      │                                                   │
-      │   ┌─────────────────────────────────────────┐     │
-      │   │ Circuito de reset:                      │     │
-      │   │                                         │     │
-      │   │  +3.3V ──[R_EN 10 kΩ]──┐                │     │
-      │   │                         ├──► Pin EN     │     │
-      │   │  GND ──[C_EN 100 nF]──┤                 │     │
-      │   │                         │                │     │
-      │   │  GND ──[SW2 tactile]───┘                │     │
-      │   └─────────────────────────────────────────┘     │
-      │                                                   │
-      │   ┌─────────────────────────────────────────┐     │
-      │   │ Strapping GPIO2 (obligatorio en C3):    │     │
-      │   │  +3.3V ──[R_STRAP 10 kΩ]──► GPIO2       │     │
-      │   └─────────────────────────────────────────┘     │
-      │                                                   │
-      │   ┌─────────────────────────────────────────┐     │
-      │   │ Botón BOOT (GPIO9):                     │     │
-      │   │  GPIO9 ──[SW1 tactile]── GND            │     │
-      │   │  (pull-up interno — sin pull-up ext.)   │     │
-      │   └─────────────────────────────────────────┘     │
-      │                                                   │
-      │   GPIO4  ──────► M3 (R1 1 kΩ → base Q1 SS8050)    │
-      │   GPIO5  ◄────── M8 (colector PC817 + R5 pull-up) │
-      │   GPIO3  ◄────── M9 (divisor NTC + R_NTC_PU)      │
-      │   GPIO6  ──────► M9 (R_LED 470 Ω → ánodo LED1)    │
-      │   GPIO18 ◄─────► M6 (USB D− + R_DM 22 Ω)          │
-      │   GPIO19 ◄─────► M6 (USB D+ + R_DP 22 Ω)          │
-      │   GPIO20 ◄────── M6 (UART RX, header J_UART)      │
-      │   GPIO21 ──────► M6 (UART TX, header J_UART)      │
-      │                                                   │
-      │             [ ANTENA PCB ↑ ]                      │
-      │        Keepout 10 mm hacia el borde exterior      │
-      │                                                   │
-      └───────────────────────────────────────────────────┘
+```
+    MÓDULO 5 — ESP32-C3-MINI-1-N4 (U1)  —  LCSC C2838502
+    ══════════════════════════════════════════════════════
+
+    +3.3V (desde M4)                                    GND_DC (plano común)
+        │                                                    │
+        ├──[C_vdd1: 10 µF X5R 0805]─────────────────────────┤
+        │                                                    │
+        ├──[C_vdd2: 100 nF X7R 0402]────────────────────────┤
+        │                                                    │
+        ▼                                                    ▼
+  ┌──────────────────────────────────────────────────────────────┐
+  │                                                              │
+  │   ┌────────── LADO IZQUIERDO ──────────┐                     │
+  │   │ Pin 1  GND  ──────► GND_DC         │                     │
+  │   │ Pin 2  GND  ──────► GND_DC         │                     │
+  │   │ Pin 3  3V3  ◄──── +3.3V (C_vdd1/2) │                     │
+  │   │ Pin 4  NC   ──── no conectar       │                     │
+  │   │ Pin 5  IO2  ◄──[R_STRAP 10 kΩ]── +3.3V   ⚠ OBLIGATORIO   │
+  │   │ Pin 6  IO3  ◄──── M9 (NTC ADC1_CH3)                      │
+  │   │ Pin 7  NC   ──── no conectar                              │
+  │   │ Pin 8  EN   ◄──[R_EN 10 kΩ]── +3.3V                       │
+  │   │              ├──[C_EN 100 nF]── GND                       │
+  │   │              └── SW2 tactile ── GND                       │
+  │   │ Pin 9  NC   ──── no conectar                              │
+  │   │ Pin 10 NC   ──── no conectar                              │
+  │   │ Pin 11 GND  ──────► GND_DC                                │
+  │   │ Pin 12 IO0  ──── libre (expansión)                        │
+  │   │ Pin 13 IO1  ──── libre (expansión)                        │
+  │   │ Pin 14 GND  ──────► GND_DC                                │
+  │   │ Pin 15 NC   ──── no conectar                              │
+  │   │ Pin 16 IO10 ──── libre (expansión)                        │
+  │   │ Pin 17 NC   ──── no conectar                              │
+  │   │ Pin 18 IO4  ──────► M3 (R1 1 kΩ → base Q1 SS8050)         │
+  │   │ Pin 19 IO5  ◄────── M8 (colector PC817 + R5 pull-up)      │
+  │   │ Pin 20 IO6  ──────► M9 (R_LED 470 Ω → ánodo LED1)         │
+  │   │ Pin 21 IO7  ──── libre (expansión)                        │
+  │   │ Pin 22 IO8  ──── strapping (pull-up interno, flotante)    │
+  │   │ Pin 23 IO9  ◄── SW1 tactile ── GND  (BOOT, PU interno)    │
+  │   │ Pin 24 NC   ──── no conectar                              │
+  │   │ Pin 25 NC   ──── no conectar                              │
+  │   │ Pin 26 IO18 ◄────► M6 (USB D− vía R_DM 22 Ω → USBLC6)     │
+  │   └─────────────────────────────────────────────────────────┘ │
+  │                                                              │
+  │   ┌────────── LADO DERECHO ───────────┐                      │
+  │   │ Pin 27 IO19 ◄────► M6 (USB D+ vía R_DP 22 Ω → USBLC6)    │
+  │   │ Pin 28 NC   ──── no conectar                              │
+  │   │ Pin 29 NC   ──── no conectar                              │
+  │   │ Pin 30 RXD0 ◄──── M6 (UART RX header J_UART, GPIO20)      │
+  │   │ Pin 31 TXD0 ──────► M6 (UART TX header J_UART, GPIO21)    │
+  │   │ Pin 32 NC   ──── no conectar                              │
+  │   │ Pin 33 NC   ──── no conectar                              │
+  │   │ Pin 34 NC   ──── no conectar                              │
+  │   │ Pin 35 NC   ──── no conectar                              │
+  │   │ Pin 36 GND  ──────► GND_DC                                │
+  │   │ Pin 37 GND  ──────► GND_DC                                │
+  │   │ Pin 38 GND  ──────► GND_DC                                │
+  │   │ Pin 39 GND  ──────► GND_DC                                │
+  │   │ Pin 40 GND  ──────► GND_DC                                │
+  │   │ Pin 41 GND  ──────► GND_DC                                │
+  │   │ Pin 42 GND  ──────► GND_DC                                │
+  │   │ Pin 43 GND  ──────► GND_DC                                │
+  │   │ Pin 44 GND  ──────► GND_DC                                │
+  │   │ Pin 45 GND  ──────► GND_DC                                │
+  │   │ Pin 46 GND  ──────► GND_DC                                │
+  │   │ Pin 47 GND  ──────► GND_DC                                │
+  │   │ Pin 48 GND  ──────► GND_DC                                │
+  │   │ Pin 49 GND  ──────► GND_DC                                │
+  │   │ Pin 50 GND  ──────► GND_DC                                │
+  │   │ Pin 51 GND  ──────► GND_DC                                │
+  │   │ Pin 52 GND  ──────► GND_DC                                │
+  │   │ Pin 53 GND  ──────► GND_DC  (pad central inferior)        │
+  │   └─────────────────────────────────────────────────────────┘ │
+  │                                                              │
+  │   Pines 36–53 forman el **pad GND inferior + anillo lateral** │
+  │   → ≥ 4 vías térmicas Ø 0.3 mm al plano GND_DC               │
+  │                                                              │
+  │            [ ANTENA PCB ↑ borde corto del módulo ]           │
+  │       Zona de keepout de 10 mm hacia el borde exterior       │
+  │                                                              │
+  └──────────────────────────────────────────────────────────────┘
+```
+
+**Resumen visual de los 3 sub-circuitos externos:**
+
+```
+  (a) Reset EN (pin 8)        (b) Strapping IO2 (pin 5)   (c) BOOT IO9 (pin 23)
+  ─────────────────────       ─────────────────────       ─────────────────────
+                                                          
+   +3.3V                        +3.3V                        Pin 23 (IO9)
+     │                            │                              │
+    [R_EN 10 kΩ]                 [R_STRAP 10 kΩ]              [SW1 tactile]
+     │                            │                              │
+     ├──► Pin 8 (EN)               └──► Pin 5 (IO2)              └──► GND
+     │
+    [C_EN 100 nF]
+     │
+    GND
+     │
+    [SW2 tactile]
+     │
+    GND
 ```
 
 ### 4.2 Tabla Pin a Pin Exhaustiva
 
-La numeración de pines sigue el **datasheet ESP32-C3-MINI-1 v1.2, figura 3** (top view).
+Correspondencia **1:1 con la huella EasyEDA Pro C2838502** (53 pines: 27 lateral izquierdo + 26 lateral derecho/inferior, incluyendo el pad GND central). Las señales `IOxx` del símbolo corresponden a `GPIOxx` del SoC.
 
-| Pin # | Nombre | Dirección | Red (net) | Conexión / Componente | Zona |
-|---|---|---|---|---|---|
-| 1 | GND | — | `GND_DC` | Pad lateral → plano GND | DC |
-| 2 | 3V3 | Power | `+3.3V` | Entrada desde M4, con C_vdd1 + C_vdd2 locales | DC |
-| 3 | EN | Input | `EN_MCU` | R_EN 10 kΩ a +3.3V, C_EN 100 nF a GND, SW2 a GND | DC |
-| 4 | GPIO4 | Output | `RELAY_CTRL` | → M3 (R1 1 kΩ → base SS8050) | DC |
-| 5 | GPIO5 | Input | `SW_IN` | ← M8 (colector PC817, R5 pull-up 10 kΩ, C_deb 100 nF) | DC |
-| 6 | GPIO6 | Output | `LED_STATUS` | → M9 (R_LED 470 Ω → ánodo LED1) | DC |
-| 7 | GPIO7 | — | `GPIO7_NC` | Flotante / libre para expansión futura | DC |
-| 8 | GND | — | `GND_DC` | Pad lateral → plano GND | DC |
-| 9 | GPIO8 | Strap | `GPIO8_STRAP` | Flotante (pull-up interno); strapping boot ROM output | DC |
-| 10 | GPIO9 | Input | `BOOT_BTN` | SW1 tactile a GND (pull-up interno del chip) | DC |
-| 11 | GPIO10 | — | `GPIO10_NC` | Flotante / libre para expansión | DC |
-| 12 | VDD_SPI | Power | — | **NO USAR** (interno a flash SPI) | DC |
-| 13–19 | GPIO11–17 | — | — | **NO ACCESIBLES** (dedicados a flash SPI interna) | DC |
-| 20 | GPIO18 | USB D− | `USB_DN` | → M6 (R_DM 22 Ω → USBLC6 → conector J_USB) | DC |
-| 21 | GPIO19 | USB D+ | `USB_DP` | → M6 (R_DP 22 Ω → USBLC6 → conector J_USB) | DC |
-| 22 | GPIO20 | Input | `UART_RX` | → M6 (header J_UART pin 3) | DC |
-| 23 | GPIO21 | Output | `UART_TX` | → M6 (header J_UART pin 2) | DC |
-| 24 | GND | — | `GND_DC` | Pad lateral → plano GND | DC |
-| 25 | GPIO0 | — | `GPIO0_NC` | Flotante / libre | DC |
-| 26 | GPIO1 | — | `GPIO1_NC` | Flotante / libre | DC |
-| 27 | GPIO2 | Strap | `GPIO2_STRAP` | **R_STRAP 10 kΩ a +3.3V (OBLIGATORIO)** | DC |
-| 28 | GPIO3 | ADC | `NTC_SENSE` | ← M9 (divisor R_NTC_PU 10 kΩ + NTC_temp 10 k) | DC |
-| — | Pad GND inferior | — | `GND_DC` | Pad central → plano GND con ≥ 4 vías térmicas Ø 0.3 mm | DC |
+| Pin # | Nombre (huella) | GPIO / función SoC | Dirección | Red (net) | Conexión / Componente | Strapping |
+|---|---|---|---|---|---|---|
+| 1 | GND | — | — | `GND_DC` | Pad lateral → plano GND | — |
+| 2 | GND | — | — | `GND_DC` | Pad lateral → plano GND | — |
+| 3 | 3V3 | VDD 3.3 V | Power | `+3.3V` | Entrada desde M4 + C_vdd1 + C_vdd2 locales | — |
+| 4 | NC | — | — | — | **No conectar** | — |
+| 5 | IO2 | GPIO2 | Strap | `GPIO2_STRAP` | **R_STRAP 10 kΩ a +3.3V (OBLIGATORIO)** | **Sí ⚠** |
+| 6 | IO3 | GPIO3 / ADC1_CH3 | ADC Input | `NTC_SENSE` | ← M9 (divisor R_NTC_PU 10 kΩ + NTC_temp 10 k) | No |
+| 7 | NC | — | — | — | **No conectar** | — |
+| 8 | EN | Chip Enable | Input | `EN_MCU` | R_EN 10 kΩ a +3.3V, C_EN 100 nF a GND, SW2 a GND | — |
+| 9 | NC | — | — | — | **No conectar** | — |
+| 10 | NC | — | — | — | **No conectar** | — |
+| 11 | GND | — | — | `GND_DC` | Pad lateral → plano GND | — |
+| 12 | IO0 | GPIO0 | — | `GPIO0_NC` | Flotante / libre para expansión | No |
+| 13 | IO1 | GPIO1 | — | `GPIO1_NC` | Flotante / libre para expansión | No |
+| 14 | GND | — | — | `GND_DC` | Pad lateral → plano GND | — |
+| 15 | NC | — | — | — | **No conectar** | — |
+| 16 | IO10 | GPIO10 | — | `GPIO10_NC` | Flotante / libre para expansión | No |
+| 17 | NC | — | — | — | **No conectar** | — |
+| 18 | IO4 | GPIO4 | Output | `RELAY_CTRL` | → M3 (R1 1 kΩ → base Q1 SS8050) | No |
+| 19 | IO5 | GPIO5 | Input | `SW_IN` | ← M8 (colector PC817, R5 pull-up 10 kΩ, C_deb 100 nF) | No |
+| 20 | IO6 | GPIO6 | Output | `LED_STATUS` | → M9 (R_LED 470 Ω → ánodo LED1) | No |
+| 21 | IO7 | GPIO7 | — | `GPIO7_NC` | Flotante / libre para expansión | No |
+| 22 | IO8 | GPIO8 | Strap | `GPIO8_STRAP` | **Flotante** (pull-up interno suficiente) | Sí |
+| 23 | IO9 | GPIO9 | Input | `BOOT_BTN` | SW1 tactile a GND (pull-up interno del chip) | **Sí** |
+| 24 | NC | — | — | — | **No conectar** | — |
+| 25 | NC | — | — | — | **No conectar** | — |
+| 26 | IO18 | GPIO18 (USB D−) | USB | `USB_DN` | → M6 (R_DM 22 Ω → USBLC6-2SC6 → J_USB) | — |
+| 27 | IO19 | GPIO19 (USB D+) | USB | `USB_DP` | → M6 (R_DP 22 Ω → USBLC6-2SC6 → J_USB) | — |
+| 28 | NC | — | — | — | **No conectar** | — |
+| 29 | NC | — | — | — | **No conectar** | — |
+| 30 | RXD0 | GPIO20 (UART0 RX) | Input | `UART_RX` | ← M6 (header J_UART pin 3) | — |
+| 31 | TXD0 | GPIO21 (UART0 TX) | Output | `UART_TX` | → M6 (header J_UART pin 2) | — |
+| 32 | NC | — | — | — | **No conectar** | — |
+| 33 | NC | — | — | — | **No conectar** | — |
+| 34 | NC | — | — | — | **No conectar** | — |
+| 35 | NC | — | — | — | **No conectar** | — |
+| 36–52 | GND (×17) | — | — | `GND_DC` | Pads laterales + centrales → plano GND | — |
+| 53 | GND | — | — | `GND_DC` | **Pad central inferior** → plano GND_DC con ≥ 4 vías térmicas Ø 0.3 mm | — |
 
-**Nota:** los números de pin exactos pueden variar según revisión del datasheet; usar siempre la **footprint oficial de EasyEDA Pro** generada automáticamente al importar el símbolo con LCSC **C2838502**.
+**Resumen de conexiones externas (14 pines activos):**
+
+| Señal | Pin huella | GPIO | Destino |
+|---|---|---|---|
+| Alimentación +3.3V | 3 | VDD | M4 |
+| Reset EN | 8 | EN | R_EN + C_EN + SW2 |
+| Strapping IO2 | 5 | GPIO2 | R_STRAP a +3.3V |
+| NTC ADC | 6 | GPIO3 | M9 |
+| Control relé | 18 | GPIO4 | M3 |
+| Entrada switch | 19 | GPIO5 | M8 |
+| LED estado | 20 | GPIO6 | M9 |
+| Botón BOOT | 23 | GPIO9 | SW1 a GND |
+| USB D− | 26 | GPIO18 | M6 |
+| USB D+ | 27 | GPIO19 | M6 |
+| UART RX | 30 | GPIO20 | M6 |
+| UART TX | 31 | GPIO21 | M6 |
+| GND (múltiples) | 1, 2, 11, 14, 36–53 | — | Plano GND_DC |
+
+Los **26 pines NC + 6 pines GPIO libres** (IO0, IO1, IO7, IO10 + IO8 flotante) se dejan sin conexión en el esquemático. EasyEDA Pro reportará un warning de ERC para pines sin conectar; asignarles el flag **"No Connect (NC)"** explícitamente para suprimir el warning y documentar la intención.
 
 ### 4.3 Detalle de los Circuitos de Soporte
 

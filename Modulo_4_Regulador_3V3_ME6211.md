@@ -1,6 +1,6 @@
 # Módulo 4: Regulador LDO 3.3 V (ME6211C33M5G-N) — Documento Técnico
 
-## Proyecto: Smart Relay ESP32-C3/C6 de 1 Canal
+## Proyecto: Smart Relay ESP32-C3 de 1 Canal
 
 **Versión:** 1.0
 **Fecha:** 2026-04-17
@@ -18,12 +18,12 @@ Sus funciones son:
 1. **Regular** el rail +3.3 V con tolerancia ≤ ±2% bajo toda condición de carga (desde 15 mA de idle hasta 350 mA pico durante transmisión WiFi).
 2. **Atenuar** el ruido de conmutación del convertidor flyback del HLK-5M05 (65–100 kHz) y del rizado de la bobina del relé (50/60 Hz) antes de que llegue al microcontrolador y al ADC.
 3. **Tolerar** caídas transitorias del rail +5 V durante los bursts de transmisión WiFi (cuando el HLK-5M05 puede deprimirse hasta ~4.5 V) gracias a su **dropout voltage de sólo 100 mV**.
-4. **Minimizar** el consumo quiescente (40 µA) para permitir que el ESP32-C6 aproveche su modo deep-sleep sin que el LDO sea la carga dominante.
+4. **Minimizar** el consumo quiescente (40 µA) para permitir que el ESP32-C3 aproveche su modo deep-sleep sin que el LDO sea la carga dominante.
 5. **Proporcionar** una referencia limpia (ruido ≤ 36 µVrms) para la medición del ADC del NTC térmico del Módulo 9.
 
 Las **entradas** del módulo (`+5V_COMBINED`) provienen del **Módulo 7** (combinador OR-diode AC/USB). Las **salidas** (`+3.3V`, `GND_DC`) alimentan:
 
-- **Módulo 5** — ESP32-C3/C6-MINI-1 (consumidor principal).
+- **Módulo 5** — ESP32-C3-MINI-1-N4 (consumidor principal, LCSC C2838502).
 - **Módulo 8** — optoacoplador secundario (fototransistor del PC817 → GPIO5, con pull-up a +3.3V).
 - **Módulo 9** — divisor NTC para el ADC de temperatura y LED de estado GPIO6.
 - **Módulo 6** — opcionalmente, el USBLC6-2SC6 (referencia de +3.3V cuando se alimenta vía USB-C).
@@ -114,7 +114,7 @@ El **PSRR (Power Supply Rejection Ratio)** mide cuánto ruido del rail de entrad
 
 **¿Por qué importa este número?**
 
-El ADC del ESP32-C6 tiene 12 bits con referencia Vref = 3.3 V:
+El ADC del ESP32-C3 tiene 12 bits (2 canales SAR ADC de 12 bits) con referencia Vref = 3.3 V:
 - 1 LSB = 3.3 V / 4096 = **805 µV**.
 - El ruido del rail (36 µVrms = ~240 µV pico-pico) representa **<1/3 de un LSB** → no degrada la resolución efectiva del ADC.
 - Para comparación, un LDO con PSRR de 40 dB (ej: AMS1117) daría ruido transferido de ~500 µVrms → 0.6 LSB de ruido constante → resolución efectiva degradada a 11 bits.
@@ -123,7 +123,7 @@ El ADC del ESP32-C6 tiene 12 bits con referencia Vref = 3.3 V:
 
 ### 2.4 Dropout Voltage de 100 mV — Margen Durante Bursts WiFi
 
-Durante la transmisión WiFi del ESP32-C6, la corriente pico instantánea puede alcanzar **350 mA** durante ventanas de 1–2 ms. Esto crea dos efectos en cadena:
+Durante la transmisión WiFi del ESP32-C3, la corriente pico típica es **335 mA** (datasheet WiFi 11b @ +20 dBm TX) durante ventanas de 1–2 ms. Para sizing del LDO usamos **350 mA como pico de diseño** (margen del 4% sobre el peor caso del datasheet). Esto crea dos efectos en cadena:
 
 1. **Caída en el HLK-5M05:** el regulador flyback tiene respuesta transitoria limitada (loop de compensación ~1 kHz). Durante el burst, el rail +5V puede caer momentáneamente a **4.5 V**.
 2. **Caída adicional en C_out1 (100 µF electrolítico del M2):** la ESR del electrolítico (~0.2 Ω) × 350 mA = 70 mV adicionales → +5V efectivo = 4.43 V.
@@ -138,7 +138,7 @@ Durante la transmisión WiFi del ESP32-C6, la corriente pico instantánea puede 
 **Comparación con AMS1117-3.3 (rechazado):**
 - Dropout del AMS1117: **1.3 V** a plena carga.
 - V_in disponible: 4.43 V → V_out = 4.43 – 1.3 = **3.13 V**.
-- El ESP32-C6 opera a partir de 3.0 V, pero el ADC pierde exactitud por debajo de 3.2 V, y la radio WiFi puede auto-resetearse por brownout configurado a 3.1 V.
+- El ESP32-C3 opera a partir de 3.0 V (rango VDD: 3.0–3.6 V nominal), pero el ADC pierde exactitud por debajo de 3.2 V, y la radio WiFi puede auto-resetearse por brownout configurado a 2.93 V (valor por defecto del BOD).
 - **Conclusión:** el AMS1117 causaría resets aleatorios durante la operación normal → rechazo técnico válido.
 
 ### 2.5 Estabilidad con MLCC Cerámicos — Elección de C4, C5, C6
@@ -164,13 +164,13 @@ El datasheet del ME6211 recomienda **1 µF mínimo X7R en la salida**. Especific
 
 ### 2.6 Corriente Quiescente de 40 µA — Impacto en Deep-Sleep
 
-El ESP32-C6 tiene un modo **deep-sleep** con consumo típico de 5 µA. Cuando el dispositivo despierta cada 30 min para reportar estado (uso típico de automatización residencial), el consumo promedio depende fuertemente del hardware de soporte:
+El ESP32-C3 tiene un modo **deep-sleep** con consumo típico de 5 µA (RTC memory retention + RTC timer). Cuando el dispositivo despierta cada 30 min para reportar estado (uso típico de automatización residencial), el consumo promedio depende fuertemente del hardware de soporte:
 
 **Presupuesto de corriente en deep-sleep (solo sistemas siempre-ON):**
 
 | Elemento | Corriente | Comentario |
 |---|---|---|
-| ESP32-C6 en deep-sleep | 5 µA | RTC on, wake on timer |
+| ESP32-C3 en deep-sleep | 5 µA | RTC on, wake on timer |
 | **ME6211C33 (Iq)** | **40 µA** | Siempre activo mientras haya +5V |
 | LED de estado (apagado) | 0 µA | GPIO driven LOW = LED off |
 | Divisor NTC (10 kΩ pull-up) | 0 µA | Pull-up sólo drena cuando ADC mide (ciclado) |
@@ -236,36 +236,70 @@ Si el Smart Relay se instala en un lugar con temperatura ambiente más alta (ej:
 
 ### 4.1 Diagrama General del Módulo
 
-```
-       MÓDULO 4 — Regulador LDO 3.3V (ME6211C33)
-       ══════════════════════════════════════════
+El diagrama refleja la disposición **del símbolo esquemático en EasyEDA Pro** (vista del esquemático, no del footprint físico). En el símbolo, los pines 1/2/3 están en el lado izquierdo y los pines 5/4 en el lado derecho.
 
-    +5V_COMBINED                                    +3.3V
-    (desde M7) ────┬─────────[C4: 1µF/25V X7R]──┐              ┌──►[M5: ESP32]
-                    │          0603              │              │
-                    │                            │              ├──►[M8: PC817 sec.]
-                    ▼                            ▼              │
-              ┌─────────────────────────────────────┐          ├──►[M9: NTC pull-up]
-              │     U2 — ME6211C33M5G-N             │          │
-              │     SOT-23-5                        │──────────┼──►[M9: LED status]
-              │                                     │          │
-              │  Pin 1 (VIN) ───  entrada            │          │
-              │  Pin 2 (VSS) ─── GND_DC              │          │
-              │  Pin 3 (CE)  ─── tied to VIN (ON)    │          │
-              │  Pin 4 (NC)  ─── floating            │          │
-              │  Pin 5 (VOUT)─── salida +3.3V        │          │
-              │                                     │          │
-              └─────────────────────────────────────┘          │
-                              │                                │
-                              ├──[C5: 10µF/25V X5R 0805]──┐   │
-                              │                            │   │
-                              └──[C6: 100nF/16V X7R 0402]──┼───┘
-                                                           │
-                                                          GND_DC
-                                                       (plano inferior
-                                                        con 4 vías térmicas
-                                                        bajo pin 2)
+**Concepto clave:** los tres capacitores son de desacople. Cada uno tiene una terminal en un rail (`+5V_COMBINED` o `+3.3V`) y la otra terminal en `GND_DC`. **No van en serie entre sí** — van todos en paralelo contra tierra.
+
+- **C4** = capacitor de **entrada** → entre `+5V_COMBINED` y `GND_DC`, lo más cerca posible del Pin 1 (VIN).
+- **C5** = capacitor de **salida bulk** → entre `+3.3V` y `GND_DC`, cerca del Pin 5 (VOUT).
+- **C6** = capacitor de **salida HF** → entre `+3.3V` y `GND_DC`, todavía **más cerca** del Pin 5 que C5.
+
+C5 y C6 están en paralelo entre sí (ambos entre +3.3V y GND). C4 está solo en la entrada.
+
 ```
+         ENTRADA (+5V_COMBINED)                  SALIDA (+3.3V)
+              de M7                        hacia M5, M8, M9
+                │                                   ▲
+                │                                   │
+                │  ┌─────── U2 ME6211C33 ────────┐  │
+                │  │                              │  │
+                ├──┤ 1 ● VIN             VOUT ● 5 ├──┤
+                │  │                              │  │
+                │  │ 2 ● VSS               NC ● 4 ├──✕ (flotante)
+                │  │                              │
+                └──┤ 3 ● CE                       │
+                   │                              │
+                   │  SOT-23-5  —  vista símbolo  │
+                   └──────────────────────────────┘
+                │         (pin 2 VSS)              │
+                │              │                   │
+                │              │                   │
+      ┌─────────┤              │         ┌─────────┼─────────┐
+      │         │              │         │         │         │
+      │        ═╪═             │        ═╪═       ═╪═        │
+      │   C4   ─┴─            │   C5   ─┴─   C6  ─┴─        │
+      │  1µF/25V               │  10µF/25V   100nF/16V       │
+      │  X7R 0603              │  X5R 0805   X7R 0402        │
+      │    │                   │    │         │              │
+      │    │                   │    │         │              │
+      └────┴───────────────────┴────┴─────────┴──────────────┘
+                              GND_DC
+                     (plano común de tierra DC)
+```
+
+**Leyenda:**
+- `═╪═` / `─┴─` = símbolo de capacitor MLCC no polarizado (los dos pads son intercambiables).
+- Las líneas horizontales superior e inferior son los rails comunes (`+5V_COMBINED` arriba-izquierda, `+3.3V` arriba-derecha, `GND_DC` abajo que atraviesa todo).
+
+**Lectura rápida en EasyEDA (donde va cada pin de cada capacitor):**
+
+| Componente | Pad 1 → conecta a | Pad 2 → conecta a |
+|---|---|---|
+| **C4** (1µF 0603) | `+5V_COMBINED` (mismo net que U2 pin 1) | `GND_DC` |
+| **C5** (10µF 0805) | `+3.3V` (mismo net que U2 pin 5) | `GND_DC` |
+| **C6** (100nF 0402) | `+3.3V` (mismo net que U2 pin 5) | `GND_DC` |
+
+**Puente Pin 1 ↔ Pin 3 (CE siempre ON):**
+- En EasyEDA Pro, simplemente colocas el wire-label `+5V_COMBINED` en el cable que sale del Pin 1 **y** en el cable que sale del Pin 3. Quedan conectados por el mismo net-name — no necesitas dibujar una traza diagonal.
+
+**Pin 4 (NC):**
+- Colocas el símbolo "No Connect" (✕) sobre el pin 4 para que el ERC de EasyEDA no dé warning.
+
+**Notas del diagrama:**
+- El pin 3 (CE) se puentea directamente al pin 1 (VIN) mediante un wire-label `+5V_COMBINED` común en EasyEDA — no se requiere traza física diagonal en el PCB, sólo net-label compartido.
+- El pin 4 (NC) **se deja flotante** en el esquemático (sin net, sin DNP). EasyEDA Pro marcará un warning de ERC que se puede resolver colocando un "no-connect flag" (X) sobre el pin.
+- Los tres capacitores (C4, C5, C6) van entre sus respectivos rails (+5V_COMBINED o +3.3V) y GND_DC — todos comparten la misma referencia de tierra.
+- El círculo `●` en el pin 1 (VIN) del símbolo EasyEDA indica el pin 1 (convención estándar), no es polaridad.
 
 ### 4.2 Tabla de Nets (Conexiones Eléctricas)
 
@@ -436,7 +470,7 @@ C6 — Capacitor salida HF MLCC (100 nF / 16 V X7R 0402, YAGEO CC0402KRX7R9BB104
 ### 6.2 Justificación Final
 
 1. **Dropout 100 mV** — tolera caídas del +5V rail hasta 3.4 V antes de perder regulación; AMS1117 fallaría a 4.6 V.
-2. **Iq 40 µA** — compatible con modo deep-sleep del ESP32-C6; AMS1117 consume 100× más.
+2. **Iq 40 µA** — compatible con modo deep-sleep del ESP32-C3; AMS1117 consume 100× más.
 3. **PSRR 75 dB** — mantiene el ADC del ESP32 con 12 bits útiles para medir NTC térmico.
 4. **Estable con MLCC** — no requiere tantalio (caros, propensos a fallas en cortocircuito cuando envejecen, ambientalmente cuestionables).
 5. **Precio intermedio** — $0.12 vs $0.16 del AP2112K (sorprendentemente más barato que su competencia directa por volumen de fabricación en Asia).
@@ -607,7 +641,7 @@ El rail `+5V_COMBINED` es el resultado del **OR-diode** del Módulo 7 (sumado en
 Módulo 4 (ME6211)                        Consumidores de +3.3V
 ══════════════════                       ═══════════════════════════
 
-U2 pin 5 (VOUT) ───┬──► +3.3V ───┬──► M5: ESP32-C3/C6-MINI-1 VDD (120–350 mA pk)
+U2 pin 5 (VOUT) ───┬──► +3.3V ───┬──► M5: ESP32-C3-MINI-1-N4 VDD (120 mA nom / 335 mA pk)
                    │              │      + C_vdd1 (10 µF) + C_vdd2 (100 nF)
               C5   │              │
               C6   │              ├──► M8: PC817 pull-up de fototransistor GPIO5 (~0.3 mA)
@@ -623,8 +657,8 @@ U2 pin 5 (VOUT) ───┬──► +3.3V ───┬──► M5: ESP32-C3/C
 
 | Consumidor | I_idle | I_activo | I_pico |
 |---|---|---|---|
-| ESP32-C6 (WiFi conectado, sin TX) | 15 mA | 120 mA | — |
-| ESP32-C6 TX WiFi burst | — | — | 350 mA |
+| ESP32-C3 (WiFi conectado, sin TX) | 15 mA | 120 mA | — |
+| ESP32-C3 TX WiFi burst (pico típico) | — | — | 335 mA |
 | PC817 fototransistor pull-up | 0 | 0.3 mA | 0.3 mA |
 | NTC pull-up (ciclado ADC) | 0 | 0.15 mA | 0.15 mA |
 | LED estado (ON) | 0 | 3 mA | 3 mA |
@@ -637,7 +671,7 @@ Margen al máximo del LDO (500 mA): **29%** → suficiente para variaciones de p
 El plano `GND_DC` del Módulo 4 es **el mismo** plano GND_DC que alimenta:
 - Secundario del HLK-5M05 (M2).
 - Bobina del relé (M3).
-- ESP32-C3/C6 (M5).
+- ESP32-C3 (M5).
 - USB-C (M6) — vía referencia común después del fusible PTC.
 - Fototransistor del optoacoplador (M8).
 - NTC y LED (M9).
