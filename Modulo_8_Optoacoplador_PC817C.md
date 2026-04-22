@@ -47,7 +47,7 @@ El **PC817C** resuelve esto con una barrera adicional de **5000 Vrms entre su LE
 
 ### 2.1 Aislamiento Galvánico con el PC817C
 
-El PC817 es un optoacoplador de 4 pines (DIP-4) compuesto internamente por un **diodo LED infrarrojo de GaAs** (pines 1-2, zona primaria) y un **fototransistor NPN de silicio** (pines 3-4, zona secundaria). Los dos componentes están encapsulados en el mismo package pero separados por una resina epoxi aislante con rigidez dieléctrica de **5000 Vrms por 1 minuto** (IEC 60747-5-5).
+El PC817 es un optoacoplador de 4 pines (disponible en DIP-4 THT o SMD-4P — este diseño usa **SMD-4P** del LCSC C3025164 por disponibilidad de stock y compatibilidad con SMT assembly en JLCPCB) compuesto internamente por un **diodo LED infrarrojo de GaAs** (pines 1-2, zona primaria) y un **fototransistor NPN de silicio** (pines 3-4, zona secundaria). Los dos componentes están encapsulados en el mismo package pero separados por una resina epoxi aislante con rigidez dieléctrica de **5000 Vrms por 1 minuto** (IEC 60747-5-5).
 
 No hay ninguna conexión eléctrica entre ambos lados — toda la transferencia de información ocurre **por luz infrarroja** (~950 nm) del LED al fototransistor. Eso significa:
 
@@ -212,7 +212,7 @@ El MPN **YAGEO CC0402KRX7R9BB104** (LCSC C14663) es el mismo capacitor 100 nF qu
 
 ---
 
-## 3. Asignación de Pines — PC817C DIP-4 y Posición en PCB
+## 3. Asignación de Pines — PC817C (SMD-4P) y Posición en PCB
 
 ### 3.1 Pinout del PC817C (vista desde arriba, con el notch a la izquierda)
 
@@ -229,9 +229,13 @@ El MPN **YAGEO CC0402KRX7R9BB104** (LCSC C14663) es el mismo capacitor 100 nF qu
        (primario)                 (secundario)
 ```
 
+El pinout lógico es **idéntico en DIP-4 y SMD-4P** — solo cambia el método de soldadura (THT vs SMT gull-wing).
+
 ### 3.2 Correspondencia con el símbolo EasyEDA Pro
 
-Huella LCSC **C66463** — Sharp `PC817X2NSZ0F`, encapsulado DIP-4 (pitch entre filas 7.62 mm, pitch entre pines 2.54 mm). El símbolo en EasyEDA Pro expone los 4 pines directamente sin bondeo interno.
+Huella LCSC **C3025164** — GOODWORK `PC817C`, encapsulado **SMD-4P** (pitch entre filas 7.62 mm, pitch entre pines de una fila 2.54 mm, pads gull-wing superficiales). El símbolo en EasyEDA Pro expone los 4 pines directamente sin bondeo interno.
+
+**Alternativa THT (si se prefiere ensamblaje manual):** huella LCSC C115500 (Wuxi China Resources Huajing) en encapsulado **DIP-4** pasante. Mismas dimensiones del cuerpo, pines atravesando el PCB. La huella debe cambiarse explícitamente en EasyEDA Pro — no son intercambiables en el PCB aunque compartan el símbolo esquemático.
 
 | Pin símbolo | Función | Zona | Net |
 |---|---|---|---|
@@ -268,7 +272,7 @@ El cuerpo del PC817 debe colocarse **cruzando el slot fresado** de 2 mm que sepa
 
 **Criterios críticos:**
 - El **slot fresado** debe tener al menos **2 mm de ancho** a lo largo de toda la frontera AC/DC bajo el PC817. Esto elimina el camino de creepage sobre FR-4 (que normalmente requeriría 6.4 mm según IEC 60664-1 @ 300 V RMS Pollution Degree 2).
-- La separación entre pines 1-2 (lado AC) y pines 3-4 (lado DC) del propio PC817 es **7.62 mm** (pitch entre filas del DIP-4), garantizando el creepage funcional por encima del cuerpo del componente.
+- La separación entre pines 1-2 (lado AC) y pines 3-4 (lado DC) del propio PC817 es **7.62 mm** (pitch entre filas, idéntico en SMD-4P y DIP-4), garantizando el creepage funcional por encima del cuerpo del componente.
 - **Ningún otro componente, via o traza de señal** debe cruzar el slot entre las zonas AC y DC. El PC817 es el único "puente" permitido.
 - La huella LCSC C66463 en EasyEDA Pro incluye el outline correcto — verificar en DRC que no hay vías dentro del keepout del cuerpo.
 
@@ -420,50 +424,79 @@ El cuerpo del PC817 debe colocarse **cruzando el slot fresado** de 2 mm que sepa
 
 ### 4.3 Diagrama ASCII Lado DC Detallado (secundario)
 
+Hay solo **3 componentes** del lado DC (R5, PC817 pines 3-4, C_deb) más la conexión a GPIO5. La topología es un clásico **pull-up con colector abierto + filtro RC**:
+
 ```
    PC817C — Lado DC (fototransistor) y filtro de salida
    ═════════════════════════════════════════════════════
 
-                       +3.3V (desde M4 / ME6211)
-                          │
-                          │
-                    ┌─────┴─────┐
-                    │  R5  10kΩ │  0402 SMD
-                    │  ±5%      │  C25744
-                    └─────┬─────┘
-                          │
-                          │ Net: SW_IN
-                          │
-                          ├──────────────────► GPIO5 (M5, pin 19 del ESP32-C3)
-                          │
-          ┌───────────────┴──────────┐
-          │                          │
-          │                          │
-     ┌────┴─────┐              ┌─────┴────┐
-     │  PC817C  │              │  C_deb   │
-     │          │              │ 100nF X7R│
-     │ Pin 4 ●  │◄── SW_IN     │  0402    │
-     │ Collector│              │  C14663  │
-     │          │              └─────┬────┘
-     │  │       │                    │
-     │  ▼       │                    │
-     │ [photo]  │                    │
-     │  │       │                    │
-     │  ▼       │                    │
-     │ Pin 3    │                    │
-     │ Emitter  │                    │
-     │    │     │                    │
-     └────┼─────┘                    │
-          │                          │
-          └──────────────────────────┤
-                                     │
-                                     ▼
-                                  GND_DC (plano común con M2/M4/M5/M6/M7/M9)
+                 +3.3V  (rail del Módulo 4 / ME6211)
+                   │
+                   │
+              ┌────┴────┐
+              │   R5    │   ← pull-up (10 kΩ, 0402, C25744)
+              │  10 kΩ  │
+              └────┬────┘
+                   │
+        ┌──────────┼──────────┐
+        │          │          │
+        │          │          │
+        │          ▼          │
+        │      ═══════        │
+        │      Net SW_IN ─────┼──────► GPIO5 del ESP32-C3
+        │                     │        (pin 19 del módulo MINI-1,
+        │                     │         Módulo 5)
+        │                     │
+   ┌────┴─────┐         ┌─────┴────┐
+   │  PC817   │         │  C_deb   │   ← filtro debounce
+   │  Pin 4   │         │  100 nF  │     (0402 X7R, C131394)
+   │(Colector)│         │  50 V    │
+   │          │         │  X7R     │
+   │     │    │         │          │
+   │     ▼    │         │          │
+   │  [foto-  │         │          │
+   │   trans] │         │          │
+   │     │    │         │          │
+   │     ▼    │         │          │
+   │  Pin 3   │         │          │
+   │(Emisor)  │         │          │
+   │    │     │         │          │
+   └────┼─────┘         └────┬─────┘
+        │                    │
+        │                    │
+        └──────────┬─────────┘
+                   │
+                   ▼
+                 GND_DC   (plano común con M2/M4/M5/M6/M7/M9)
 ```
 
-### 4.4 Tabla Pin a Pin Exhaustiva — PC817C (U3)
+**Lectura del diagrama (4 conexiones físicas en el PCB):**
 
-Huella **DIP-4 through-hole** del LCSC C66463. Pin 1 identificado por el punto/notch en el encapsulado.
+1. **R5** — pad 1 a **+3.3V**, pad 2 al **pin 4 del PC817** (colector). Net `SW_IN` nace aquí.
+2. **C_deb** — pad 1 al mismo **pin 4 del PC817** (en paralelo con el colector), pad 2 a **GND_DC**.
+3. **Pin 3 del PC817** (emisor) — directo a **GND_DC**.
+4. **Net `SW_IN`** (que es eléctricamente idéntico a "pin 4 del PC817") — sale como traza hacia **GPIO5** del ESP32-C3.
+
+En el esquemático de EasyEDA Pro se ve como **un solo nodo con 4 conexiones** (una junction point):
+- R5 viene de arriba (+3.3V)
+- C_deb baja a GND
+- Pin 4 del PC817 entra por un lado
+- Traza `SW_IN` sale hacia GPIO5
+
+### 4.4 Cómo se comporta el circuito (analogía mecánica)
+
+Piensa el fototransistor del PC817 como un **interruptor mecánico** que conecta `SW_IN` a `GND_DC` cuando "ve" luz del LED interno:
+
+| Estado del interruptor de pared | LED del PC817 | Fototransistor (Pin 4 ↔ Pin 3) | Nodo `SW_IN` |
+|---|---|---|---|
+| **Abierto** (no hay AC en J_SW) | Apagado | **Abierto** (alta impedancia) | R5 tira hacia +3.3V → **HIGH (3.3 V)** |
+| **Cerrado** (AC presente en J_SW) | Pulsando a 50/60 Hz | **Cerrado** (baja impedancia, ≈V_CE_sat = 0.2 V) | R5 pierde contra el "corto" del transistor → **LOW (~0 V)** |
+
+El **C_deb** absorbe el ripple de 50/60 Hz del LED (rectificación de media onda) para que `SW_IN` quede plano DC y no oscile a frecuencia de red.
+
+### 4.5 Tabla Pin a Pin Exhaustiva — PC817C (U3)
+
+Huella **SMD-4P** del LCSC C3025164 (primario recomendado) o **DIP-4 through-hole** del LCSC C115500 (alternativa THT). Pin 1 identificado por el punto/notch en el encapsulado.
 
 | Pin | Nombre | Zona | Net | Conexión aguas arriba | Conexión aguas abajo |
 |---|---|---|---|---|---|
@@ -474,7 +507,7 @@ Huella **DIP-4 through-hole** del LCSC C66463. Pin 1 identificado por el punto/n
 
 > **Nota de orientación en EasyEDA Pro:** el símbolo del C66463 debe colocarse con pines 1-2 hacia la zona AC del esquemático (izquierda por convención) y pines 3-4 hacia la zona DC (derecha). La huella en el PCB debe alinearse de forma que el cuerpo cruce el slot fresado de forma consistente con esta orientación.
 
-### 4.5 Tabla Pin a Pin — J_SW (Terminal Block Screw)
+### 4.6 Tabla Pin a Pin — J_SW (Terminal Block Screw)
 
 Huella **THT paso 5.0 mm** del LCSC C474950 (Cixi Kefa `KF128-5.0-2P`). Rating 300 V / 10 A — suficiente para 110/220 V residencial.
 
@@ -485,7 +518,7 @@ Huella **THT paso 5.0 mm** del LCSC C474950 (Cixi Kefa `KF128-5.0-2P`). Rating 3
 
 > **Instalación de campo:** el usuario cablea **L → interruptor → J_SW pin 1 (SW_HOT)** y **N → J_SW pin 2 (AC_N)**. Cuando el interruptor está cerrado, hay diferencia de potencial AC entre los dos terminales y el LED del PC817 conduce en semiciclos positivos. Cuando el interruptor está abierto, ambos terminales quedan al mismo potencial (neutro flotante o ambos a N), el LED no conduce.
 
-### 4.6 Subcircuitos Detallados
+### 4.7 Subcircuitos Detallados
 
 ```
 (a) Limitador de corriente AC + rectificador   (b) Pull-up + filtro debounce DC
@@ -648,51 +681,33 @@ Latencia total de detección del cambio de estado del interruptor:
 
 | # | Ref | Componente | Valor / Specs | Encapsulado | **LCSC** | Fabricante | MPN | Qty | Verificado |
 |---|---|---|---|---|---|---|---|---|---|
-| 1 | **U3** (U_OPTO) | Optoacoplador PC817C | CTR ≥ 200 % grado C, V_CE = 35 V, 5000 Vrms, 950 nm | DIP-4 (cruza slot) | **C115500** | Wuxi China Resources Huajing | PC817C | 1 | ✓ lcsc.com |
+| 1 | **U3** (U_OPTO) | Optoacoplador PC817C | CTR ≥ 200 % grado C, V_CE = 35 V, 5000 Vrms, 950 nm | **SMD-4P** (cruza slot) | **C3025164** | GOODWORK | PC817C | 1 | ✓ lcsc.com — 612k stock |
 | 2 | **D2** | Diodo rectificador 1N4007 | V_R = 1000 V, I_F = 1 A, V_F ≤ 1.1 V | SMA (DO-214AC) | **C727081** | TWGMC | 1N4007 | 1 | ✓ lcsc.com |
-| 3 | **R3** | Resistencia limitadora AC | 68 kΩ ±5 %, 1 W, TCR ±100 ppm/°C, MFR | Axial THT D3.3 × L9 mm | *ver §6.2.3* | YAGEO | MFR1WSJT-52-68K | 1 | ⚠ verificar manualmente |
-| 4 | **R4** | Resistencia limitadora AC | 68 kΩ ±5 %, 1 W, TCR ±100 ppm/°C, MFR | Axial THT D3.3 × L9 mm | *ver §6.2.3* | YAGEO | MFR1WSJT-52-68K | 1 | ⚠ verificar manualmente |
+| 3 | **R3** | Resistencia limitadora AC | 68 kΩ ±1 %, 1 W, TCR ±50 ppm/°C, MFR, V_max 350 V | Axial THT D3.3 × L9.2 mm | **C385419** | TyoHM | RN1WS68KΩFT/BA1 | 1 | ✓ lcsc.com (⚠ verificar stock al pedir) |
+| 4 | **R4** | Resistencia limitadora AC | 68 kΩ ±1 %, 1 W, TCR ±50 ppm/°C, MFR, V_max 350 V | Axial THT D3.3 × L9.2 mm | **C385419** | TyoHM | RN1WS68KΩFT/BA1 | 1 | ✓ lcsc.com (⚠ verificar stock al pedir) |
 | 5 | **R5** | Pull-up fototransistor | 10 kΩ ±1 %, 1/16 W, TCR ±100 ppm/°C | 0402 SMD | **C25744** | UNI-ROYAL | 0402WGF1002TCE | 1 | ✓ lcsc.com |
 | 6 | **C_deb** | Capacitor debounce HW | 100 nF / 50 V, X7R, ±10 % | 0402 SMD | **C131394** | YAGEO | CC0402KRX7R9BB104 | 1 | ✓ lcsc.com |
 | 7 | **J_SW** | Terminal block screw 2P | KF128-5.0-2P, 300 V / 10 A | THT pitch 5.0 mm | **C474950** | Cixi Kefa Elec | KF128-5.0-2P | 1 | ✓ lcsc.com |
 
 **Total componentes:** 7 referencias (6 part numbers únicos — R3/R4 comparten MPN).
-
-### 6.3 Auditoría de errores del CSV maestro [BOM_Smart_Relay_C6.csv](BOM_Smart_Relay_C6.csv)
-
-La verificación directa en **lcsc.com** (abril 2026) detectó que los códigos LCSC del CSV maestro para los 7 componentes del M8 tienen los siguientes errores. **El CSV debe actualizarse antes de enviar a fabricación.**
-
-| Ref | Código en CSV | Componente real en LCSC | Código CORRECTO | Estado |
-|---|---|---|---|---|
-| U3 (PC817C) | `C66463` | **No existe** — página 404 en lcsc.com | **C115500** (Wuxi China Resources Huajing PC817C DIP-4) | ❌ CSV equivocado |
-| D2 (1N4007) | `C727110` | **TWGMC 1N4148W** (100 V / 300 mA, SOD-123) — ¡diodo de señal, no rectificador de red! | **C727081** (TWGMC 1N4007 SMA DO-214AC 1 kV / 1 A) | ❌ CSV equivocado (peligroso — se destruiría en el primer pico de 220 V) |
-| R3 / R4 (68 k 1 W) | `C176393` | **YAGEO MFR-12JT-52-510R** (510 Ω, 167 mW) — resistor SMD pequeño | *pendiente verificación manual* (buscar "MFR1WSJT-52-68K" o equivalente) | ❌ CSV equivocado (se quemaría instantáneamente a 220 V) |
-| R5 (10 k 0402) | `C25744` | UNI-ROYAL 0402WGF1002TCE, 10 k 0402 | **C25744** (mismo) | ✓ CSV correcto |
-| C_deb (100 nF 0402) | `C14663` | **YAGEO CC0603KRX7R9BB104** (paquete **0603**, no 0402) — huella incorrecta | **C131394** (YAGEO CC0402KRX7R9BB104, 0402 50 V X7R) | ❌ CSV equivocado (huella PCB no coincidirá) |
-| J_SW (KF128-5.0-2P) | `C474950` | Cixi Kefa KF128-5.0-2P, 2P pitch 5.0 mm | **C474950** (mismo) | ✓ CSV correcto |
-
-**Implicaciones de seguridad críticas:**
-- **D2 con C727110 (1N4148W)** en vez del 1N4007: el 1N4148W tiene V_R = 100 V. A 110 V RMS (155 V pico) la primera vez que entre un semiciclo negativo, el diodo se destruye y desde ese momento el LED del PC817 queda expuesto al semiciclo inverso completo → **LED quemado en el primer ciclo**. A 220 V la falla sería aún más rápida.
-- **R3/R4 con C176393 (510 Ω, 167 mW)** en vez del 68 k 1 W: la corriente a través del LED del PC817 sería `155 V / (510 + 510) = 152 mA` — **3× el máximo absoluto del PC817** (50 mA). **El optoacoplador se destruye antes del primer semiciclo completo**, y los resistores SMD de 167 mW disiparían `155² / 1020 = 23.5 W` → incendio.
-
-**Acción requerida:** actualizar las filas 4, 10, 15, 16, 35 del CSV con los códigos correctos antes de fabricar. Las filas 17 (R5) y 53 (J_SW) están correctas.
-
 **Subtotal BOM Módulo 8 (con códigos correctos):** ≈ $0.37 USD por placa (sin ensamblaje, precios LCSC abril 2026).
 
 ### 6.2 Componentes Alternativos / Segundas Fuentes
 
 Todos los primarios están vigentes en LCSC a abril 2026. Se listan alternativas verificadas como respaldo ante out-of-stock temporales o para diseños derivados.
 
-#### 6.2.1 Alternativas para U3 (PC817C — optoacoplador 5000 Vrms, DIP-4)
+#### 6.2.1 Alternativas para U3 (PC817C — optoacoplador 5000 Vrms)
 
-| Opción | LCSC | MPN | Fabricante | Diferencia vs primario | Drop-in? |
+| Opción | LCSC | MPN | Package | Fabricante | Notas |
 |---|---|---|---|---|---|
-| **Primario** | **C115500** | PC817C | Wuxi China Resources Huajing | ✓ Verificado en lcsc.com | — |
-| Alt. 1 | **C3025164** | PC817C | GOODWORK | Segunda fuente, MPN idéntico | **Sí** |
-| Alt. 2 | **C181889** | EL817(C) | Everlight | CTR 200–400 %, pin-compatible | **Sí** (DIP-4 idéntico) |
-| Alt. 3 | **C181890** | EL817(C)-F | Everlight | Variante con marking "F", pin-compatible | **Sí** |
-| Alt. 4 | **C115459** | LTV-817-C-IN | Lite-On | CTR 200–400 %, pin-compatible | **Sí** |
-| ❌ NO usar | — | PC817A o PC817B | — | CTR insuficiente a 110 V RMS | **No** (fallo a bajo voltaje) |
+| **Primario (recomendado)** | **C3025164** | PC817C | **SMD-4P** | GOODWORK | ✓ 612k stock abril 2026, $0.039/ud, ideal para SMT assembly JLCPCB |
+| Alt. 1 (THT) | **C115500** | PC817C | DIP-4 | Wuxi China Resources Huajing | ⚠ Sin stock abril 2026. Mantener como referencia THT si se prefiere soldadura manual. Huella diferente al primario |
+| Alt. 2 | **C181889** | EL817(C) | DIP-4 | Everlight | CTR 200–400 %, verificar stock — paquete THT |
+| Alt. 3 | **C181890** | EL817(C)-F | DIP-4 | Everlight | Variante con marking "F", THT |
+| Alt. 4 | **C115459** | LTV-817-C-IN | DIP-4 | Lite-On | CTR 200–400 %, THT |
+| ❌ NO usar | — | PC817A o PC817B | — | — | CTR insuficiente a 110 V RMS |
+
+> ⚠️ **Atención al dibujar el esquemático:** la huella SMD-4P del primario **C3025164** tiene el mismo pitch entre filas (7.62 mm) que el DIP-4 clásico, pero los pads son superficiales (gull-wing) en vez de pines THT atravesando la placa. Confirma en EasyEDA Pro que la huella importada desde LCSC corresponde a **SMD-4P** y no a DIP-4; si se cambia entre ambas variantes, la huella del PCB debe regenerarse.
 
 #### 6.2.2 Alternativas para D2 (1N4007 — rectificador 1000 V / 1 A, SMA)
 
@@ -711,15 +726,18 @@ Todos los primarios están vigentes en LCSC a abril 2026. Se listan alternativas
 
 | Opción | LCSC | MPN | Fabricante | Notas |
 |---|---|---|---|---|
-| **Primario (recomendado)** | *verificar en lcsc.com* | **MFR1WSJT-52-68K** | YAGEO | Serie YAGEO MFR1WSJT-52 (1 W axial D3.3×L9 mm ±5 %). LCSC tiene la serie completa (confirmados: C176411 para 1K, C176399 para 100K, C176405 para 150K, C176415 para 200K) pero el C-number exacto del valor 68K debe buscarse manualmente en [lcsc.com](https://www.lcsc.com/search?q=MFR1WSJT-52-68K) — puede aparecer como part no listed si está agotado temporalmente |
-| Alt. 1 | *buscar por MPN* | **RN 1WS 68K F T/B A1** | TyoHM | Serie 1 W MFR ±1 % (±1 % mejor que ±5 % del YAGEO). Buscar en lcsc.com por MPN exacto — TyoHM tiene toda la serie RN 1WS |
+| **Primario** | **C385419** | RN1WS68KΩFT/BA1 | TyoHM | ✓ Verificado en lcsc.com — 68 kΩ ±1 % 1 W MFR axial D3.3×L9.2 mm, TCR ±50 ppm/°C, V_max 350 V. ⚠ Stock fluctuante (al momento de redactar estaba en 0 con notificación activable); confirmar al pedir |
+| Alt. 1 | *buscar por MPN* | **MFR1WSJT-52-68K** | YAGEO | 1 W axial D3.3×L9 mm ±5 % TCR ±100 ppm/°C. Familia verificada en LCSC (C176411 = 1K, C176399 = 100K, C176405 = 150K, C176415 = 200K). Buscar el C-number del valor 68K en [lcsc.com](https://www.lcsc.com/search?q=MFR1WSJT-52-68K) |
 | Alt. 2 | *buscar por MPN* | **MFR-1W-68KR-J** | UNI-ROYAL | 1 W MFR axial D3.3 mm, tolerancia ±5 %, buscar por MPN en lcsc.com |
-| Alt. 3 | *buscar por MPN* | **MF1/68KJT-52** | FH (Guangdong Fenghua) | 1 W MFR equivalente |
-| ❌ NO usar | **C176393** | MFR-12JT-52-510R | YAGEO | **510 Ω, 167 mW** — es el código equivocado del CSV maestro. Se quemaría con >23 W disipados a 155 V pico — **riesgo de incendio** |
-| ❌ NO usar | — | cualquier 1/4 W 68 kΩ | — | Se quemaría a 220 V (P = 0.356 W > 0.25 W) | 
+| Alt. 3 | *buscar por MPN* | **MF1/68KJT-52** | FH (Guangdong Fenghua) | 1 W MFR equivalente, ±5 % |
+| ❌ NO usar | C385422 | RN1WS**7.68K**ΩFT/BA1 | TyoHM | **7.68 kΩ (10× menor)** — familia correcta pero valor incorrecto. Quemaría resistores a 220 V (P = 3.15 W > 1 W nominal) |
+| ❌ NO usar | C20502029 | NFR0300006809JAC00 | VISHAY | **68 Ω, 3 W** — valor 1000× menor. Destruiría el LED PC817 con 1.14 A y disiparía ~89 W → incendio |
+| ❌ NO usar | C5140126 | SCR0805F68K | VO | **0805 SMD, 125 mW** — valor correcto pero 8× menor potencia y paquete incompatible con la huella PCB |
+| ❌ NO usar | **C176393** | MFR-12JT-52-510R | YAGEO | **510 Ω, 167 mW** — código equivocado del CSV maestro. Destrucción instantánea |
+| ❌ NO usar | — | cualquier 1/4 W 68 kΩ | — | Se quemaría a 220 V (P/resistor = 0.356 W > 0.25 W nominal) |
 | ❌ NO usar | — | carbón composition | — | TCR alto, deriva AC, poco fiable a largo plazo |
 
-> **Acción concreta para R3/R4:** ir a [lcsc.com](https://www.lcsc.com) y buscar textual `MFR1WSJT-52-68K`. Alternativamente filtrar la categoría "Metal Film Resistor (TH)" por resistencia 68 kΩ + potencia 1 W + package "D3.3×L9mm". Tomar el primer resultado en stock con precio razonable (<$0.05/ud típico) y registrar el C-number en el CSV final.
+> **Consejo de compra:** si al hacer el pedido C385419 sigue sin stock, usa la Alt. 1 (YAGEO `MFR1WSJT-52-68K`, típicamente con stock alto) o cualquier otro 68 kΩ / 1 W / MFR / axial D3.3×L9 mm con stock inmediato — las especificaciones eléctricas son equivalentes. Mantener el MPN en el CSV actualizado.
 
 #### 6.2.4 Alternativas para R5 (10 kΩ, 0402)
 
@@ -752,6 +770,25 @@ Todos los primarios están vigentes en LCSC a abril 2026. Se listan alternativas
 | Alt. 3 | **C395872** | DB128V-5.0-2P | DEGSON | Equivalente genérico 300 V / 10 A pitch 5.0 mm | 
 
 > **Nota sobre conductor:** el cable del interruptor de pared típicamente es AWG 18 (1 mm²) en instalaciones colombianas. Tanto el KF128-5.0-2P como alternativas acomodan 12–24 AWG según datasheet.
+
+### 6.3 Auditoría de errores del CSV maestro [BOM_Smart_Relay_C6.csv](BOM_Smart_Relay_C6.csv)
+
+La verificación directa en **lcsc.com** (abril 2026) detectó que los códigos LCSC del CSV maestro para los 7 componentes del M8 tienen los siguientes errores. **El CSV debe actualizarse antes de enviar a fabricación.**
+
+| Ref | Código en CSV | Componente real en LCSC | Código CORRECTO | Estado |
+|---|---|---|---|---|
+| U3 (PC817C) | `C66463` | **No existe** — página 404 en lcsc.com | **C3025164** (GOODWORK PC817C **SMD-4P**, 612k stock abril 2026) — alternativa THT: C115500 Wuxi China Resources Huajing PC817C DIP-4 (actualmente sin stock) | ❌ CSV equivocado |
+| D2 (1N4007) | `C727110` | **TWGMC 1N4148W** (100 V / 300 mA, SOD-123) — ¡diodo de señal, no rectificador de red! | **C727081** (TWGMC 1N4007 SMA DO-214AC 1 kV / 1 A) | ❌ CSV equivocado (peligroso — se destruiría en el primer pico de 220 V) |
+| R3 / R4 (68 k 1 W) | `C176393` | **YAGEO MFR-12JT-52-510R** (510 Ω, 167 mW) — resistor SMD pequeño | **C385419** (TyoHM RN1WS68KΩFT/BA1, 68 kΩ 1 W ±1 % MFR axial D3.3×L9.2 mm, 350 V, ±50 ppm/°C — verificar stock al pedir) | ❌ CSV equivocado (se quemaría instantáneamente a 220 V) |
+| R5 (10 k 0402) | `C25744` | UNI-ROYAL 0402WGF1002TCE, 10 k 0402 | **C25744** (mismo) | ✓ CSV correcto |
+| C_deb (100 nF 0402) | `C14663` | **YAGEO CC0603KRX7R9BB104** (paquete **0603**, no 0402) — huella incorrecta | **C131394** (YAGEO CC0402KRX7R9BB104, 0402 50 V X7R) | ❌ CSV equivocado (huella PCB no coincidirá) |
+| J_SW (KF128-5.0-2P) | `C474950` | Cixi Kefa KF128-5.0-2P, 2P pitch 5.0 mm | **C474950** (mismo) | ✓ CSV correcto |
+
+**Implicaciones de seguridad críticas:**
+- **D2 con C727110 (1N4148W)** en vez del 1N4007: el 1N4148W tiene V_R = 100 V. A 110 V RMS (155 V pico) la primera vez que entre un semiciclo negativo, el diodo se destruye y desde ese momento el LED del PC817 queda expuesto al semiciclo inverso completo → **LED quemado en el primer ciclo**. A 220 V la falla sería aún más rápida.
+- **R3/R4 con C176393 (510 Ω, 167 mW)** en vez del 68 k 1 W: la corriente a través del LED del PC817 sería `155 V / (510 + 510) = 152 mA` — **3× el máximo absoluto del PC817** (50 mA). **El optoacoplador se destruye antes del primer semiciclo completo**, y los resistores SMD de 167 mW disiparían `155² / 1020 = 23.5 W` → incendio.
+
+**Acción requerida:** actualizar las filas 4, 10, 15, 16, 35 del CSV con los códigos correctos antes de fabricar. Las filas 17 (R5) y 53 (J_SW) están correctas.
 
 ---
 
