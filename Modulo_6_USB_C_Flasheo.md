@@ -74,22 +74,32 @@ En USB-C, los pines **CC1 y CC2** son los canales de configuración (*Configurat
 
 Los pines D+/D− del ESP32-C3 están conectados directamente al controlador USB Serial/JTAG en silicio. Una descarga ESD de ±8 kV (lo que ocurre rutinariamente al tocar un dispositivo con un cuerpo cargado) puede **dañar permanentemente** estas entradas. La especificación UL/CE EMC y el IEC 61000-4-2 exigen que cualquier puerto externo sobreviva a **nivel 4: ±8 kV contacto / ±15 kV aire**.
 
-El **USBLC6-2SC6** de STMicroelectronics es un **TVS array** de 4 líneas (2 I/O pairs) en SOT-23-6 diseñado específicamente para USB 1.1/2.0. Su topología interna:
+El **USBLC6-2SC6** de STMicroelectronics es un **TVS array** de 4 líneas (2 I/O pairs) en SOT-23-6 diseñado específicamente para USB 1.1/2.0. Su topología interna — confirmada por la huella EasyEDA del LCSC C7519 — está compuesta de **4 diodos rectificadores de steering + 1 diodo Zener central**:
 
 ```
-                VBUS (pin 5)  ── conectado a +3.3V (ver §2.3.1)
-                     │
-                ┌────┴────┐
-                │  Clamp  │
-                │  diodes │
-                │ (2× para cada I/O)
-                └────┬────┘
-                     │
-  I/O1 ──[diodo]─────┼─── a GND (pin 2)
-                     │
-  I/O2 ──[diodo]─────┘
-         [diodo Zener a VBUS del TVS para clamp positivo]
+                           +3.3V (desde M4)
+                                │
+                         Pin 5 (VBUS rail interno)
+                                │
+                   ┌────────────┼────────────┐
+                   │            │            │
+                 ─▷│─         ─▷│─         ─▷│─ ──┐   (diodos steering al positivo)
+              I/O1 │       Zener│        I/O2│    │
+        (pin 1↔6)  │            ▼            │(pin 3↔4)
+                   │          [TVS]           │
+                   │            ▼            │
+                 ─◁│─         ─◁│─         ─◁│─ ──┤   (diodos steering al negativo)
+                   │            │            │
+                   └────────────┼────────────┘
+                                │
+                          Pin 2 (GND rail interno)
+                                │
+                              GND_DC
 ```
+
+**Cómo funciona el clamp:**
+- **Pulso ESD positivo** en I/O1 o I/O2 → el diodo steering superior conduce y lleva la sobretensión al rail VBUS interno → el Zener central se abre cuando VBUS supera el umbral (~6 V) y shunta la energía a GND.
+- **Pulso ESD negativo** → el diodo steering inferior conduce y lleva la sobretensión directamente a GND.
 
 El clamp ocurre en **< 1 ns**, mucho antes de que el transitorio llegue al ESP32-C3. La capacitancia agregada a D+/D− es sólo **~3 pF** por línea, compatible con USB Full-Speed (el límite USB-IF es 50 pF total sobre el par).
 
@@ -106,9 +116,9 @@ Los resistores **R_DP y R_DM (22 Ω ±5 %, 0402)** en serie con D+ y D− cumple
 
 **Valor crítico:** 22 Ω. No 10 Ω (reflexiones excesivas), no 33 Ω (eye-diagram marginal a 12 Mbps), no 0 Ω (reflexiones severas). 22 Ω es el valor de referencia de Espressif en todos sus diseños oficiales y en el **ESP32-C3 Hardware Design Guidelines v1.3** §"USB Serial/JTAG".
 
-### 2.5 Fusible Resettable PTC (500 mA, V_hold 6 V)
+### 2.5 Fusible Resettable PTC (500 mA, V_max 24 V)
 
-El **PTC1** es un fusible *polymer positive temperature coefficient* (MF-050 o equivalente). Su comportamiento:
+El **PTC1** es un fusible *polymer positive temperature coefficient* — Jinrui `JK-nSMD050-24` (LCSC C369160) o equivalente. Su comportamiento:
 
 | Parámetro | Valor | Comentario |
 |---|---|---|
@@ -201,30 +211,39 @@ La conmutación AC ↔ USB la maneja el **Módulo 7** (OR-diode selector), fuera
 
 ---
 
-## 3. Asignación de Pines del Conector USB-C 16-pin
+## 3. Asignación de Pines — Símbolo J_USB vs Conector USB-C Físico
 
-Correspondencia 1:1 con la huella **EasyEDA Pro del LCSC C165948** (Korean Hroparts `TYPE-C-31-M-12`, mid-mount SMD con tabs). El conector expone 16 pines (de los 24 eléctricos totales de USB-C) — los 8 pines restantes del estándar completo (SBU1/2 y D+/D− de la fila opuesta) se dejan sin conexión interna en esta variante.
+El conector USB-C del estándar tiene **24 pines eléctricos** (12 por fila, reversible). La huella **EasyEDA Pro del LCSC C165948** (Korean Hroparts `TYPE-C-31-M-12`, mid-mount SMD con tabs) simplifica ese pinout a **16 pines de símbolo**: 12 pines lógicos (lado izquierdo) + 4 pines EH del shield (lado derecho). El fabricante bondea internamente las parejas de pines redundantes por reversibilidad — el diseñador no necesita unirlos externamente en el esquemático.
 
-| Pin físico | Fila | Nombre | Función | Net destino | Observación |
-|---|---|---|---|---|---|
-| A1 | A | GND | Retorno de corriente | `GND_DC` | Soldar al plano GND |
-| A4 | A | VBUS | +5 V desde PC | `VBUS_IN` | Unido internamente a B4; entrada de PTC1 |
-| A5 | A | CC1 | Configuration Channel 1 | `CC1` | Pull-down R_CC1 (5.1 kΩ) a GND |
-| A6 | A | D+ | Datos + (fila A) | `USB_DP_CONN` | Unido a B6 antes del USBLC6 |
-| A7 | A | D− | Datos − (fila A) | `USB_DN_CONN` | Unido a B7 antes del USBLC6 |
-| A12 | A | GND | Retorno de corriente | `GND_DC` | Soldar al plano GND |
-| B1 | B | GND | Retorno de corriente | `GND_DC` | Soldar al plano GND |
-| B4 | B | VBUS | +5 V (reversibilidad) | `VBUS_IN` | Unido internamente a A4 |
-| B5 | B | CC2 | Configuration Channel 2 | `CC2` | Pull-down R_CC2 (5.1 kΩ) a GND |
-| B6 | B | D+ | Datos + (fila B) | `USB_DP_CONN` | Unido a A6 antes del USBLC6 |
-| B7 | B | D− | Datos − (fila B) | `USB_DN_CONN` | Unido a A7 antes del USBLC6 |
-| B12 | B | GND | Retorno de corriente | `GND_DC` | Soldar al plano GND |
-| SHELL-1 | — | Shell mecánico | Blindaje EMI | `SHIELD` | R_shell + C_shell a GND_DC |
-| SHELL-2 | — | Shell mecánico | Blindaje EMI | `SHIELD` | Mismo net que SHELL-1 |
-| TAB-1 | — | Tab de anclaje | Fijación mecánica | `GND_DC` | Reforzar con soldadura mecánica |
-| TAB-2 | — | Tab de anclaje | Fijación mecánica | `GND_DC` | Reforzar con soldadura mecánica |
+### 3.1 Pines del Símbolo (EasyEDA Pro, lo que ves al colocar el componente)
 
-**Pines no usados / NC en esta variante del conector:** A2 (SSTX+), A3 (SSTX−), A8 (SBU1), A9 (VBUS extra), A10 (SSRX−), A11 (SSRX+), B2 (SSRX+), B3 (SSRX−), B8 (SBU2), B9 (VBUS extra), B10 (SSTX−), B11 (SSTX+). La huella del LCSC C165948 omite estos pads físicamente.
+| Pin símbolo | Función | Pines físicos del USB-C que bondea |
+|---|---|---|
+| `A1B12` | GND | A1 + B12 |
+| `A4B9` | VBUS | A4 + B9 |
+| `B8` | SBU2 | B8 (sin bondear; NC en USB 2.0) |
+| `A5` | CC1 | A5 |
+| `B7` | DN2 (D− fila B) | B7 |
+| `A6` | DP1 (D+ fila A) | A6 |
+| `A7` | DN1 (D− fila A) | A7 |
+| `B6` | DP2 (D+ fila B) | B6 |
+| `A8` | SBU1 | A8 (sin bondear; NC en USB 2.0) |
+| `B5` | CC2 | B5 |
+| `B4A9` | VBUS | B4 + A9 |
+| `B1A12` | GND | B1 + A12 |
+| `EH 1..4` | Shield (housing) | 4 tabs mecánicos del shell metálico |
+
+### 3.2 Pines del conector físico USB-C no cubiertos por este símbolo
+
+Los siguientes pines del estándar USB-C 3.x están **omitidos** en la huella C165948 (no tienen pad en el PCB): **A2, A3, A10, A11** (par SuperSpeed TX+/TX−/RX−/RX+ de la fila A) y **B2, B3, B10, B11** (par SuperSpeed de la fila B). Esto es normal en conectores USB 2.0 Full-Speed de costo moderado — el producto no usa USB 3.x.
+
+### 3.3 Notas clave para el dibujo del esquemático
+
+- **DP1/DP2 y DN1/DN2 NO están bondeados internamente** en el símbolo. Debes dibujar explícitamente la unión (wire) entre `A6`–`B6` y entre `A7`–`B7` para que la reversibilidad del USB-C funcione. Es un error común omitir esta unión y que la placa solo enumere en una orientación del cable.
+- **A1B12 y B1A12 son GND** — ambos pines del símbolo deben ir al mismo plano `GND_DC`.
+- **A4B9 y B4A9 son VBUS** — ambos pines del símbolo deben ir al mismo net `VBUS_IN` (antes del PTC1).
+- **SBU1 (A8) y SBU2 (B8)** — marcar con flag "No Connect (NC)" en ERC; el símbolo los expone pero en USB 2.0 no se usan.
+- **EH 1..4** — los 4 pines del shield deben ir al mismo net `SHIELD`, que se cierra a `GND_DC` a través del paralelo R_shell ∥ C_shell (ver §2.7).
 
 ---
 
@@ -232,101 +251,118 @@ Correspondencia 1:1 con la huella **EasyEDA Pro del LCSC C165948** (Korean Hropa
 
 ### 4.1 Diagrama ASCII Completo del Módulo 6
 
+Numeración y etiquetas de pines tomadas directamente de la **huella oficial EasyEDA Pro del LCSC C165948** (Korean Hroparts `TYPE-C-31-M-12`). El símbolo tiene **12 pines lógicos en el lado izquierdo** (agrupando físicamente los pares GND y VBUS redundantes por reversibilidad del USB-C) más **4 pines EH** (Earth/Housing, el shield mecánico) en el lado derecho:
+
+- `A1B12`, `B1A12` — **GND** (cada uno bondea 2 pines físicos del conector internamente en el fabricante).
+- `A4B9`, `B4A9` — **VBUS** (cada uno bondea 2 pines físicos, total 4 pines VBUS para 3 A nominal).
+- `A5` — **CC1**, `B5` — **CC2** (pines individuales, no bondeados).
+- `A6` — **DP1** (D+ fila A), `B6` — **DP2** (D+ fila B). Pines **separados** en el símbolo — deben unirse externamente por traza a `USB_DP_CONN`.
+- `A7` — **DN1** (D− fila A), `B7` — **DN2** (D− fila B). Igual: unir externamente a `USB_DN_CONN`.
+- `A8` — **SBU1**, `B8` — **SBU2** (no usados en USB 2.0, dejar NC).
+- `EH 1..4` — los 4 pines del shield / housing del conector, todos al mismo net `SHIELD`.
+
 ```
-    MÓDULO 6 — USB-C FLASHEO (J_USB)  —  LCSC C165948
-    ═════════════════════════════════════════════════════
+    MÓDULO 6 — USB-C FLASHEO (J_USB: TYPE-C-31-M-12, LCSC C165948)
+    ═══════════════════════════════════════════════════════════════
 
                                                               Hacia Módulo 7
                                                               (OR-diode AC/USB)
-                                                                    ▲
-                                                                    │ +5V_USB
-                                                                    │
-  J_USB (USB-C 16-pin mid-mount SMD)                                │
-  ┌─────────────────────────────────┐                               │
-  │                                 │                               │
-  │  A4 ──┐                         │                               │
-  │       ├── VBUS_IN ──[PTC1]──────┼───┬───[C_USB1 10µF]── GND     │
-  │  B4 ──┘  (500 mA)               │   │                           │
-  │                                 │   ├───[C_USB2 100nF]── GND    │
-  │                                 │   │                           │
-  │                                 │   └───────────────────────────┘
-  │                                 │
-  │  A5 ── CC1 ──[R_CC1 5.1kΩ]──────┼──► GND
-  │  B5 ── CC2 ──[R_CC2 5.1kΩ]──────┼──► GND
-  │                                 │
-  │  A6 ──┐                         │
-  │       ├── USB_DP_CONN ───────────┼──┐
-  │  B6 ──┘                         │  │
-  │                                 │  ├──► USBLC6-2SC6 pin 3 (I/O2)
-  │                                 │  │    └──► pin 4 ──[R_DP 22Ω]──► GPIO19 (USB_DP)
-  │                                 │  │
-  │  A7 ──┐                         │  │
-  │       ├── USB_DN_CONN ──────────┼──┤
-  │  B7 ──┘                         │  │
-  │                                 │  └──► USBLC6-2SC6 pin 1 (I/O1)
-  │                                 │       └──► pin 6 ──[R_DM 22Ω]──► GPIO18 (USB_DN)
-  │                                 │
-  │  A1, A12, B1, B12 ── GND ───────┼──► GND_DC (plano)
-  │                                 │
-  │  SHELL ─────────────────────────┼──┬──[R_shell 1MΩ]── GND_DC
-  │                                 │  │
-  │                                 │  └──[C_shell 4.7nF]── GND_DC
-  │                                 │
-  │  TAB1, TAB2 ────────────────────┼──► GND_DC (refuerzo mecánico)
-  │                                 │
-  └─────────────────────────────────┘
+                                                                      ▲
+                                                                      │ +5V_USB
+                                                                      │
+                                                                      │
+  J_USB — símbolo EasyEDA Pro (12 pines izq. + 4 EH der.)             │
+  ┌──────────────────────────────────┐                                │
+  │                                  │                                │
+  │  A1B12 ── GND ───────────────────┼──► GND_DC (plano)              │
+  │                                  │                                │
+  │  A4B9 ─── VBUS ──────────┐       │                                │
+  │                           ├── VBUS_IN ──[PTC1]──┬─► +5V_USB ──────┘
+  │  B4A9 ─── VBUS ──────────┘       │   (500 mA)   │
+  │                                  │              ├──[C_USB1 10µF]── GND_DC
+  │                                  │              │
+  │                                  │              └──[C_USB2 100nF]── GND_DC
+  │                                  │
+  │  B8 ───── SBU2 ── NC             │
+  │  A8 ───── SBU1 ── NC             │
+  │                                  │
+  │  A5 ───── CC1 ──[R_CC1 5.1kΩ]────┼──► GND_DC
+  │  B5 ───── CC2 ──[R_CC2 5.1kΩ]────┼──► GND_DC
+  │                                  │
+  │  A6 ───── DP1 ───┐               │
+  │                  ├── USB_DP_CONN ┼──► USBLC6 pin 3 (I/O2)
+  │  B6 ───── DP2 ───┘               │       │
+  │                                  │       └──► pin 4 ──[R_DP 22Ω]──► GPIO19 (USB_DP → M5)
+  │                                  │
+  │  A7 ───── DN1 ───┐               │
+  │                  ├── USB_DN_CONN ┼──► USBLC6 pin 1 (I/O1)
+  │  B7 ───── DN2 ───┘               │       │
+  │                                  │       └──► pin 6 ──[R_DM 22Ω]──► GPIO18 (USB_DN → M5)
+  │                                  │
+  │  B1A12 ── GND ───────────────────┼──► GND_DC (plano)
+  │                                  │
+  │  EH 1 ──┐                        │
+  │  EH 2 ──┤                        │
+  │  EH 3 ──┼── SHIELD ──┬──[R_shell 1MΩ]── GND_DC
+  │  EH 4 ──┘            │
+  │                      └──[C_shell 4.7nF]── GND_DC
+  │                                  │
+  └──────────────────────────────────┘
 
-                   USBLC6-2SC6 (U_TVS) — SOT-23-6
-                   ═══════════════════════════════
+         USBLC6-2SC6 (U_TVS) — SOT-23-6 (huella LCSC C7519)
+         ══════════════════════════════════════════════════
 
-                             Pin 5 (VBUS)
-                                 ▲
-                                 │
-                             +3.3V (del Módulo 4)
-                                 │
-                       ┌─────────┴─────────┐
-                       │                   │
-   USB_DN_CONN ► Pin 1 │     USBLC6        │ Pin 6 ► R_DM 22Ω ► GPIO18
-                       │   (TVS array)     │
-   Pin 2 (GND) ────────┤                   ├──── Pin 4 ► R_DP 22Ω ► GPIO19
-                       │                   │
-   USB_DP_CONN ► Pin 3  │                   │
-                       └───────────────────┘
-                                 │
-                                Pin 2
-                                 ▼
-                                GND_DC
+                       ┌─────────────────────┐
+  USB_DN_CONN ► Pin 1 ─┤                     ├─ Pin 6 ► R_DM 22Ω ► GPIO18 (USB_DN)
+                       │                     │
+       GND_DC ──────── Pin 2 ───  USBLC6  ── Pin 5 ◄──── +3.3V (desde M4)
+                       │      (TVS array)    │
+  USB_DP_CONN ► Pin 3 ─┤                     ├─ Pin 4 ► R_DP 22Ω ► GPIO19 (USB_DP)
+                       └─────────────────────┘
+
+  Nota: pin 1 ↔ pin 6 (ambos I/O1) y pin 3 ↔ pin 4 (ambos I/O2) están
+  internamente conectados por el símbolo — una sola señal eléctrica entra
+  por un lado y sale por el otro, con el clamp tapando desde el medio.
 ```
 
-### 4.2 Tabla Pin a Pin Exhaustiva — Conector USB-C (J_USB)
+### 4.2 Tabla Pin a Pin Exhaustiva — Símbolo J_USB (huella C165948)
 
-| Pin | Nombre huella | Net | Conexión directa | Componente aguas abajo | Destino final |
+Correspondencia **1:1 con los 16 pines del símbolo EasyEDA Pro** del LCSC C165948. Los pines `A1B12`, `B1A12`, `A4B9` y `B4A9` son agrupaciones bondeadas internamente por el fabricante (conveniencia del símbolo; eléctricamente equivalentes a unir los pines físicos correspondientes). Los 4 pines EH son el shield metálico del conector expuestos en 4 puntos de soldadura mecánica.
+
+| # | Pin símbolo | Pines físicos | Función | Net | Conexión aguas abajo |
 |---|---|---|---|---|---|
-| A1 | GND | `GND_DC` | Plano GND | — | Retorno de corriente |
-| A4 | VBUS | `VBUS_IN` | Junction con B4 | PTC1 (pad 1) | +5V_USB → M7 |
-| A5 | CC1 | `CC1` | — | R_CC1 (pad 1) → GND | Enumeración USB-C |
-| A6 | D+ | `USB_DP_CONN` | Junction con B6 | USBLC6 pin 3 | D+ hacia GPIO19 |
-| A7 | D− | `USB_DN_CONN` | Junction con B7 | USBLC6 pin 1 | D− hacia GPIO18 |
-| A12 | GND | `GND_DC` | Plano GND | — | Retorno de corriente |
-| B1 | GND | `GND_DC` | Plano GND | — | Retorno de corriente |
-| B4 | VBUS | `VBUS_IN` | Junction con A4 | PTC1 (pad 1) | +5V_USB → M7 |
-| B5 | CC2 | `CC2` | — | R_CC2 (pad 1) → GND | Enumeración USB-C |
-| B6 | D+ | `USB_DP_CONN` | Junction con A6 | USBLC6 pin 3 | D+ hacia GPIO19 |
-| B7 | D− | `USB_DN_CONN` | Junction con A7 | USBLC6 pin 1 | D− hacia GPIO18 |
-| B12 | GND | `GND_DC` | Plano GND | — | Retorno de corriente |
-| SHELL × 2 | SHIELD | `SHIELD` | — | R_shell ∥ C_shell → GND_DC | Drenaje EMI |
-| TAB × 2 | TAB | `GND_DC` | Plano GND | — | Refuerzo mecánico |
+| 1 | `A1B12` | A1 + B12 | GND | `GND_DC` | Plano GND |
+| 2 | `A4B9` | A4 + B9 | VBUS | `VBUS_IN` | Junction con `B4A9` → PTC1 pad 1 |
+| 3 | `B8` | B8 | SBU2 | — | **NC** (marcar "No Connect" en ERC) |
+| 4 | `A5` | A5 | CC1 | `CC1` | R_CC1 (pad 1) → GND |
+| 5 | `B7` | B7 | DN2 (D− fila B) | `USB_DN_CONN` | Junction con `A7` (DN1) → USBLC6 pin 1 |
+| 6 | `A6` | A6 | DP1 (D+ fila A) | `USB_DP_CONN` | Junction con `B6` (DP2) → USBLC6 pin 3 |
+| 7 | `A7` | A7 | DN1 (D− fila A) | `USB_DN_CONN` | Junction con `B7` (DN2) → USBLC6 pin 1 |
+| 8 | `B6` | B6 | DP2 (D+ fila B) | `USB_DP_CONN` | Junction con `A6` (DP1) → USBLC6 pin 3 |
+| 9 | `A8` | A8 | SBU1 | — | **NC** (marcar "No Connect" en ERC) |
+| 10 | `B5` | B5 | CC2 | `CC2` | R_CC2 (pad 1) → GND |
+| 11 | `B4A9` | B4 + A9 | VBUS | `VBUS_IN` | Junction con `A4B9` → PTC1 pad 1 |
+| 12 | `B1A12` | B1 + A12 | GND | `GND_DC` | Plano GND |
+| 13 | `EH 1` | Shell tab 1 | Shield mecánico | `SHIELD` | R_shell ∥ C_shell → GND_DC |
+| 14 | `EH 2` | Shell tab 2 | Shield mecánico | `SHIELD` | R_shell ∥ C_shell → GND_DC |
+| 15 | `EH 3` | Shell tab 3 | Shield mecánico | `SHIELD` | R_shell ∥ C_shell → GND_DC |
+| 16 | `EH 4` | Shell tab 4 | Shield mecánico | `SHIELD` | R_shell ∥ C_shell → GND_DC |
+
+> **Nota sobre D+ y D−:** en este símbolo los pines `DP1`/`DP2` (y `DN1`/`DN2`) son **pines separados** que EasyEDA Pro NO bondea internamente. El diseñador debe dibujar explícitamente la unión (wire/junction) entre `A6`–`B6` (ambos a `USB_DP_CONN`) y entre `A7`–`B7` (ambos a `USB_DN_CONN`). Si se omite la unión, sólo una fila del conector USB-C conducirá datos y la reversibilidad se pierde.
 
 **Resumen de señales activas que salen del conector (6 nets):**
 
-| Señal | Pines del conector | Destino |
+| Señal | Pines del símbolo | Destino |
 |---|---|---|
-| `VBUS_IN` | A4, B4 | PTC1 → filtro → M7 |
-| `CC1` | A5 | R_CC1 → GND |
-| `CC2` | B5 | R_CC2 → GND |
-| `USB_DP_CONN` | A6, B6 | USBLC6 pin 3 |
-| `USB_DN_CONN` | A7, B7 | USBLC6 pin 1 |
-| `SHIELD` | SHELL ×2 | R_shell ∥ C_shell → GND_DC |
+| `VBUS_IN` | `A4B9`, `B4A9` | PTC1 → filtro → M7 |
+| `CC1` | `A5` | R_CC1 → GND |
+| `CC2` | `B5` | R_CC2 → GND |
+| `USB_DP_CONN` | `A6` + `B6` | USBLC6 pin 3 |
+| `USB_DN_CONN` | `A7` + `B7` | USBLC6 pin 1 |
+| `SHIELD` | `EH 1..4` | R_shell ∥ C_shell → GND_DC |
+| `GND_DC` | `A1B12`, `B1A12` | Plano GND |
+
+**Pines NC (no conectar, aplicar flag "No Connect" en ERC):** `SBU1` (A8), `SBU2` (B8).
 
 ### 4.3 Tabla Pin a Pin — USBLC6-2SC6 (U_TVS)
 
@@ -432,7 +468,7 @@ Todos los componentes están verificados para importación directa desde **LCSC 
 |---|---|---|---|---|---|---|---|---|---|---|
 | 1 | **J_USB** | Conector USB-C 16-pin mid-mount SMD con tabs | Tipo-C 2.0, reversible, VBUS 3 A nominal | SMD mid-mount | **C165948** | Korean Hroparts Elec | TYPE-C-31-M-12 | 1 | $0.25 | ✓ |
 | 2 | **U_TVS** | USB ESD TVS array 4 líneas | IEC 61000-4-2 Nivel 4, 3 pF/línea, clamp ~6 V | SOT-23-6 | **C7519** | STMicroelectronics | USBLC6-2SC6 | 1 | $0.12 | ✓ |
-| 3 | **PTC1** | Fusible resettable PPTC | 500 mA I_hold, 1.1 A I_trip, V_max 24 V | 1206 SMD | **C369153** | TECHFUSE | nSMD050-24V | 1 | $0.06 | ✓ |
+| 3 | **PTC1** | Fusible resettable PPTC | 500 mA I_hold, 1.1 A I_trip, V_max 24 V | 1206 SMD | **C369160** | Jinrui | JK-nSMD050-24 | 1 | $0.06 | ✓ |
 | 4 | **R_CC1** | Resistor pull-down CC1 USB-C | 5.1 kΩ ±1 %, 1/16 W | 0402 | **C25905** | UNI-ROYAL | 0402WGF5101TCE | 1 | $0.005 | ✓ |
 | 5 | **R_CC2** | Resistor pull-down CC2 USB-C | 5.1 kΩ ±1 %, 1/16 W | 0402 | **C25905** | UNI-ROYAL | 0402WGF5101TCE | 1 | $0.005 | ✓ |
 | 6 | **R_DP** | Resistor terminación serie D+ | 22 Ω ±5 %, 1/16 W | 0402 | **C25092** | UNI-ROYAL | 0402WGF220JTCE | 1 | $0.005 | ✓ |
@@ -476,9 +512,10 @@ Todos los primarios tienen LCSC vigente a abril 2026. Se listan alternativas ver
 
 | Opción | LCSC | MPN | Fabricante | Notas |
 |---|---|---|---|---|
-| **Primario** | **C369153** | nSMD050-24V | TECHFUSE | I_hold 500 mA / V_max 24 V |
-| Alt. 1 | **C132148** | MF-MSMF050-2 | Bourns | Misma especificación, 1812 (⚠ footprint más grande) |
-| Alt. 2 | **C78506** | 1206L050YR | Littelfuse | 1206, I_hold 500 mA, V_max 15 V — drop-in |
+| **Primario** | **C369160** | JK-nSMD050-24 | Jinrui | ✓ Verificado abril 2026 — 73 K unidades en stock, I_hold 500 mA / V_max 24 V |
+| Alt. 1 | **TBD** | nanoSMDC050F-2 | Littelfuse | 1206, I_hold 500 mA, V_max 6 V — buscar MPN en lcsc.com |
+| Alt. 2 | **TBD** | MF-MSMF050-2 | Bourns | ⚠ Footprint 1812 (no 1206); requiere ajustar huella |
+| ❌ NO usar | C369153 | JK-nSMD005 | Jinrui | **50 mA** (10× demasiado pequeño); dispara en cualquier ráfaga TX WiFi |
 
 #### 6.2.4 Alternativas para R_CC1 / R_CC2 (5.1 kΩ / 0402 / ±1 %)
 

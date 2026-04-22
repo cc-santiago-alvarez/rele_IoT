@@ -45,7 +45,7 @@ C_snub,Safety Capacitor,10nF/310VAC X2,Film P=7.5mm,1,C2693738,KYET,PX103K2C0702
 F1,Fuse Slow-Blow,1A 250V 5x20mm,Axial Glass,1,C142715,Littelfuse,0215001.MXP,AC input overcurrent protection,M1
 F1_holder,Fuse Holder,5x20mm BLX-A,PCB Mount THT,1,C3131,Xucheng Elec,5x20 BLX-A XC-7,PCB mount fuseholder for F1,M1
 TF1,Thermal Fuse,115C 15A 250V,Axial THT,1,C20448209,SETsafe/SETfuse,T115,Fire protection thermal cutoff,M1
-PTC1,PTC Fuse Resettable,500mA 6V,1206,1,C369153,TECHFUSE,nSMD050-24V,USB overcurrent protection,M6
+PTC1,PTC Fuse Resettable,500mA 24V,1206,1,C369160,Jinrui,JK-nSMD050-24,USB overcurrent protection,M6
 MOV1,Varistor MOV,10D241K 150VAC MCOV,10mm Disc Radial,1,C190241,Brightking,241KD10,Surge protection 110V 2.5kA 8/20us,M1
 NTC_inrush,NTC Thermistor,5R 2A 9mm,Disc Radial P=7.5mm,1,C3789,RUILON,NTC 5D-9,Inrush current limiter 31A@110V,M1
 J_AC,Terminal Block Screw,KF128-7.5-2P 300V/15A,THT P=7.5mm,1,C474954,Cixi Kefa Elec,KF128-7.5-2P,AC input L/N,M1
